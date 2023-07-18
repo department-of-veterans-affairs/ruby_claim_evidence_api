@@ -1,0 +1,1 @@
+require "ruby_claim_evidence_api/claim_evidence"
