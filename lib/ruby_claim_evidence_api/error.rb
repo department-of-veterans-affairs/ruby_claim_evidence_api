@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-module Caseflow::Error
+module Caseflow
+  module Error
     
     # VANotify Errors
+    class VANotifyApiError < StandardError; end
     class ClaimEvidenceNotFoundErrorVANotifyNotFoundError < VANotifyApiError; end
     
     # ClaimEvidence Errors
@@ -14,4 +16,5 @@ module Caseflow::Error
     class ClaimEvidenceRateLimitError < ClaimEvidenceApiError; end
   
   end
+end
   

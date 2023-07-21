@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-
-class Fakes::ClaimEvidenceService
+module Fakes
+  class ClaimEvidenceService
     JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
     BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
     SERVER = "/api/v1/rest"
@@ -88,4 +88,5 @@ class Fakes::ClaimEvidenceService
       end
     end
   end
+end
   

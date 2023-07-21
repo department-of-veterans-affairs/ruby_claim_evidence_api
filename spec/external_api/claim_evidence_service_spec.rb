@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+require 'pry' 
+require 'httpi' 
+require 'json'
+require   "./lib/ruby_claim_evidence_api/external_api/claim_evidence_service.rb"
+require  "./lib/ruby_claim_evidence_api/error.rb"
+
 describe ExternalApi::ClaimEvidenceService do
     let(:notification_url) { "fake.api.vanotify.com" }
     let(:client_secret) { "SOME-FAKE-KEY" }

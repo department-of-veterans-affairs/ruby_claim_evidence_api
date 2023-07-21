@@ -10,7 +10,7 @@ class FindEnvVariables
     end
   
     private
-  
+    
     def files
       app_rb_files + app_erb_files + config_files + script_files + lib_files
     end
