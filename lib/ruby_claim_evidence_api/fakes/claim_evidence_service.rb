@@ -71,13 +71,13 @@ module Fakes
           case method
           when :get
             response = conn.get(SERVER + endpoint, query)
-            service_response = ExternalApi::ClaimEvidenceService::Response.new(response)
+            service_response = ExternalApi::Response.new(response)
             fail service_response.error if service_response.error.present?
   
             service_response
           when :post
             response = conn.post(SERVER + endpoint, body)
-            service_response = ExternalApi::ClaimEvidenceService::Response.new(response)
+            service_response = ExternalApi::Response.new(response)
             fail service_response.error if service_response.error.present?
   
             service_response

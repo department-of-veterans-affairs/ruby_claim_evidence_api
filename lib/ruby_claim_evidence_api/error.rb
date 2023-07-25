@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Caseflow
+module ClaimEvidenceApi
   module Error
     
     # VANotify Errors

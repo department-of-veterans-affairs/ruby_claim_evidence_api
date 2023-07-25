@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-require "./lib/ruby_claim_evidence_api/error.rb"
+require 'Faraday'
+require 'active_support/all'
+require "ruby_claim_evidence_api/error.rb"
 
 module ExternalApi
-  module ClaimEvidenceService
     class Response
         attr_reader :resp, :code
       
@@ -41,12 +42,12 @@ module ExternalApi
       
         # Error codes and their associated error
         ERROR_LOOKUP = {
-          401 => Caseflow::Error::ClaimEvidenceUnauthorizedError,
-          403 => Caseflow::Error::ClaimEvidenceForbiddenError,
-          404 => Caseflow::Error::ClaimEvidenceNotFoundError,
-          429 => Caseflow::Error::ClaimEvidenceRateLimitError,
-          500 => Caseflow::Error::ClaimEvidenceInternalServerError,
-          503 => Caseflow::Error::ClaimEvidenceNotFoundError,
+          401 => ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError,
+          403 => ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError,
+          404 => ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError,
+          429 => ClaimEvidenceApi::Error::ClaimEvidenceRateLimitError,
+          500 => ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError,
+          503 => ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError,
         }.freeze
       
         # Checks for error and returns if found
@@ -57,7 +58,7 @@ module ExternalApi
           if ERROR_LOOKUP.key? code
             ERROR_LOOKUP[code].new(code: code, message: message)
           else
-            Caseflow::Error::ClaimEvidenceApiError.new(code: code, message: message)
+            ClaimEvidenceApi::Error::ClaimEvidenceApiError.new(code: code, message: message)
           end
         end
       
@@ -72,5 +73,4 @@ module ExternalApi
           body["message"] || body["errors"][0]["message"]
         end
     end
-  end
 end

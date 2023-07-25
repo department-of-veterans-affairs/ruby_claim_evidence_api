@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# bundle exec rails runner scripts/find_env_variables.rb
-
 class FindEnvVariables
     def call
       files.each_with_object([]) do |file, result|

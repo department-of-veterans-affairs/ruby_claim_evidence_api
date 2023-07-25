@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require 'pry' 
-require 'httpi' 
-require 'json'
-require   "./lib/ruby_claim_evidence_api/external_api/claim_evidence_service.rb"
-require  "./lib/ruby_claim_evidence_api/error.rb"
+require 'httpi'
+require  "ruby_claim_evidence_api/external_api/claim_evidence_service.rb"
 
 describe ExternalApi::ClaimEvidenceService do
     let(:notification_url) { "fake.api.vanotify.com" }
@@ -124,38 +121,38 @@ describe ExternalApi::ClaimEvidenceService do
     context "resonse failure" do
       subject { ExternalApi::ClaimEvidenceService.document_types }
       context "throws fallback error" do
-        it "throws Caseflow::Error::ClaimEvidenceApiError" do
+        it "throws ClaimEvidenceApi::Error::ClaimEvidenceApiError" do
           allow(HTTPI).to receive(:get).and_return(error_response)
-          expect { subject }.to raise_error Caseflow::Error::ClaimEvidenceApiError
+          expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
         end
       end
   
       context "401" do
-        it "throws Caseflow::Error::ClaimEvidenceUnauthorizedError" do
+        it "throws ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError" do
           allow(HTTPI).to receive(:get).and_return(unauthorized_response)
-          expect { subject }.to raise_error Caseflow::Error::ClaimEvidenceUnauthorizedError
+          expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
         end
       end
   
       context "403" do
-        it "throws Caseflow::Error::ClaimEvidenceForbiddenError" do
+        it "throws ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError" do
           allow(HTTPI).to receive(:get).and_return(forbidden_response)
-          expect { subject }.to raise_error Caseflow::Error::ClaimEvidenceForbiddenError
+          expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
         end
       end
   
       context "404" do
-        it "throws Caseflow::Error::ClaimEvidenceNotFoundError" do
+        it "throws ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError" do
           allow(HTTPI).to receive(:get).and_return(not_found_response)
-          expect { subject }.to raise_error Caseflow::Error::ClaimEvidenceNotFoundError
+          expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
         end
       end
   
       context "500" do
         let!(:error_code) { 500 }
-        it "throws Caseflow::Error:ClaimEvidenceInternalServerError" do
+        it "throws ClaimEvidenceApi::Error:ClaimEvidenceInternalServerError" do
           allow(HTTPI).to receive(:get).and_return(internal_server_error_response)
-          expect { subject }.to raise_error Caseflow::Error::ClaimEvidenceInternalServerError
+          expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
         end
       end
     end

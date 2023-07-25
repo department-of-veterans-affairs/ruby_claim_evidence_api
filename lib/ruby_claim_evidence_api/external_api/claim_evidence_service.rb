@@ -1,8 +1,16 @@
 # frozen_string_literal: true
+
+require 'pry'
+require 'httpi'
+require 'active_support/all'
+require "ruby_claim_evidence_api/external_api/response.rb"
+
 module ExternalApi
   class ClaimEvidenceService
-    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
-    BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
+    # JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
+    # BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
+    JWT_TOKEN = "my-secret-algorithm"
+    BASE_URL = "https://staging-api.va.gov/vanotify"
     SERVER = "/api/v1/rest"
     DOCUMENT_TYPES_ENDPOINT = "/documenttypes"
     HEADERS = {
@@ -39,20 +47,20 @@ module ExternalApi
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
-        MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
-          case method
-          when :get
+        # MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+        #                       service: :claim_evidence,
+        #                       name: endpoint) do
+        #   case method
+        #   when :get
             response = HTTPI.get(request)
-            service_response = ExternalApi::ClaimEvidenceService::Response.new(response)
+            service_response = ExternalApi::Response.new(response)
             fail service_response.error if service_response.error.present?
 
             service_response
-          else
-            fail NotImplementedError
-          end
-        end
+        #   else
+        #     fail NotImplementedError
+        #   end
+        # end
       end
     end
   end
