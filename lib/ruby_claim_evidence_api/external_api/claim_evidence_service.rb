@@ -7,10 +7,8 @@ require "ruby_claim_evidence_api/external_api/response.rb"
 
 module ExternalApi
   class ClaimEvidenceService
-    # JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
-    # BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
-    JWT_TOKEN = "my-secret-algorithm"
-    BASE_URL = "https://staging-api.va.gov/vanotify"
+    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
+    BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
     SERVER = "/api/v1/rest"
     DOCUMENT_TYPES_ENDPOINT = "/documenttypes"
     HEADERS = {
