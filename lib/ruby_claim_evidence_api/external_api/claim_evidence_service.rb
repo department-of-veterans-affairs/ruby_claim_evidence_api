@@ -3,20 +3,19 @@
 require 'pry'
 require 'httpi'
 require 'active_support/all'
-require "ruby_claim_evidence_api/external_api/response.rb"
+require 'ruby_claim_evidence_api/external_api/response'
 
 module ExternalApi
   class ClaimEvidenceService
-    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
-    BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
-    SERVER = "/api/v1/rest"
-    DOCUMENT_TYPES_ENDPOINT = "/documenttypes"
+    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
+    BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
+    SERVER = '/api/v1/rest'
+    DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     HEADERS = {
-      "Content-Type": "application/json", Accept: "application/json"
+      "Content-Type": 'application/json', Accept: 'application/json'
     }.freeze
 
     class << self
-
       def document_types_request
         {
           headers: HEADERS,
@@ -25,15 +24,28 @@ module ExternalApi
         }
       end
 
+      def ocr_document_request(doc_uuid)
+        {
+          headers: HEADERS,
+          endpoint: "/files/#{doc_uuid}/data/ocr",
+          method: :get
+        }
+      end
+
       def document_types
-        send_ce_api_request(document_types_request).body["documentTypes"]
+        send_ce_api_request(document_types_request).body['documentTypes']
       end
 
       def alt_document_types
-        send_ce_api_request(document_types_request).body["alternativeDocumentTypes"]
+        send_ce_api_request(document_types_request).body['alternativeDocumentTypes']
       end
 
-      def send_ce_api_request(query: {}, headers: {}, endpoint:, method: :get, body: nil)
+      def get_ocr_document(doc_uuid)
+        send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Lint/UriEscapeUnescape
+      def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         url = URI.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
@@ -41,8 +53,8 @@ module ExternalApi
         request.read_timeout = 30
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
-        request.auth.ssl.ca_cert_file = ENV["SSL_CERT_FILE"]
-        request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
+        request.auth.ssl.ca_cert_file = ENV['SSL_CERT_FILE']
+        request.headers = headers.merge(Authorization: `Bearer #{JWT_TOKEN}`)
 
         sleep 1
         MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
@@ -61,5 +73,6 @@ module ExternalApi
         end
       end
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Lint/UriEscapeUnescape
   end
 end

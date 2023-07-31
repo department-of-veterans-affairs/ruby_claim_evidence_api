@@ -1,0 +1,296 @@
+{
+  "currentVersion" : {
+    "file" : {
+      "pages" : [ {
+        "lines" : [ {
+          "geometry" : {
+            "height" : 0.4,
+            "left" : 0.5,
+            "top" : 0.5,
+            "width" : 0.4
+          },
+          "pageNumber" : 1,
+          "text" : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+          "words" : [ {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "Lorem"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "ipsum"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "dolor"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "sit"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "amet"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "consectetur"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "adipiscing"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "elit"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "sed"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "do"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "eiusmod"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "tempor"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "incididunt"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "ut"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "labore"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "et"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "dolore"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "magna"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "aliqua"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "Lorem"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "ipsum"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "dolor"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "sit"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "amet"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "consectetur"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "adipiscing"
+          }, {
+            "confidence" : 0.0,
+            "geometry" : {
+              "height" : 0.0,
+              "left" : 0.0,
+              "top" : 0.0,
+              "width" : 0.0
+            },
+            "pageNumber" : 1,
+            "text" : "elit"
+          } ]
+        } ],
+        "pageNumber" : 1,
+        "text" : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+      } ],
+      "text" : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      "totalPages" : 1
+    },
+    "processingInformation" : {
+      "ocrDateTime" : "2023-07-27T14:39:31.965"
+    }
+  }
+}
