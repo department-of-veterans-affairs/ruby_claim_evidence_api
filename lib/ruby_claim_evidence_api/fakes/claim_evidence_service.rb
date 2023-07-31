@@ -97,11 +97,11 @@ module Fakes
           when :post
             response = conn.post(SERVER + endpoint, body)
             service_response = ExternalApi::Response.new(response)
-            raise service_response.error if service_response.error.present?
+            fail service_response.error if service_response.error.present?
 
             service_response
           else
-            raise NotImplementedError
+            fail NotImplementedError
           end
         end
       end
