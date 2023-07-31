@@ -9,8 +9,8 @@ module ExternalApi
 
     attr_reader :results
 
-    #TODO: Need to figure out what these environment variables actually are
-    #TODO: Need to decide on how to save "score" - save to ENV variable or initialize it with the client?
+    # TODO: Need to figure out what these environment variables actually are
+    # TODO: Need to decide on how to save "score" - save to ENV variable or initialize it with the client?
     CREDENTIALS = ENV['credentials']
     REGION = ENV['region']
     SCORE = ENV['score']
@@ -20,34 +20,62 @@ module ExternalApi
       credentials: CREDENTIALS
     )
 
-    def initialize(text_array: [], language_code: "en")
+    def initialize(text_array: [], language_code: 'en')
       @text_array = text_array
       @language_code = language_code
       @results = {}
     end
 
-    #TODO: Need to add async error handling
-    
+    def single_text_input
+      {
+        text: @text_array[0],
+        language_code: @language_code
+      }
+    end
+
+    def multiple_text_input
+      {
+        text_list: @text_array,
+        language_code: @language_code
+      }
+    end
+
     # Real Time Analysis Methods for Single Text String
     def detect_key_phrases
-      res = @client.detect_key_phrases(@text_array[0], @language_code)
-      @results[:key_phrases] = res
+      response = @client.detect_key_phrases(single_text_input)
+      relevant_key_phrases = response.key_phrases.map { |key_phrase| key_phrase.text if key_phrase.score > SCORE }
+      @results[:key_phrases] = relevant_key_phrases
+      relevant_key_phrases
+    rescue StandardError => e
+      puts e
     end
 
     def detect_entities
-      res = @client.detect_key_phrases(@text_array[0], @language_code)
-      @results[:entities] = res
+      response = @client.detect_key_phrases(single_text_input)
+      relevant_entities = response.entities.map { |entity| entity.text if entity.score > SCORE }
+      @results[:entities] = relevant_entities
+      relevant_entities
+    rescue StandardError => e
+      puts e
     end
 
     # Real Time Analysis Methods for Multiple Text Strings
     def batch_detect_key_phrases
-      res = @client.batch_detect_key_phrases(@text_array, @language_code)
-      @results[:key_phrases] = res
+      response = @client.batch_detect_key_phrases(multiple_text_input)
+      relevant_key_phrases = response.key_phrases.map { |key_phrase| key_phrase.text if key_phrase.score > SCORE }
+      @results[:key_phrases] = relevant_key_phrases
+      relevant_key_phrases
+    rescue StandardError => e
+      puts e
     end
 
     def batch_detect_entities
-      res = @client.batch_detect_entities(@text_array, @language_code)
-      @results[:entities] = res
+      response = @client.batch_detect_entities(multiple_text_input)
+      relevant_entities = response.entities.map { |entity| entity.text if entity.score > SCORE }
+      @results[:entities] = relevant_entities
+      relevant_entities
+    rescue StandardError => e
+      puts e
     end
   end
 end
