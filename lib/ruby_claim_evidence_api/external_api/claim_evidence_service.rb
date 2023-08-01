@@ -7,6 +7,7 @@ require "ruby_claim_evidence_api/external_api/response.rb"
 
 module ExternalApi
   class ClaimEvidenceService
+
     JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
     BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
     SERVER = "/api/v1/rest"
@@ -14,9 +15,13 @@ module ExternalApi
     HEADERS = {
       "Content-Type": "application/json", Accept: "application/json"
     }.freeze
+    CREDENTIALS = Aws::Credentials.new(
+      ENV['AWS_ACCESS_KEY_ID'],
+      ENV['AWS_SECRET_ACCESS_KEY']
+    )
+    REGION = ENV['AWS_DEFAULT_REGION']
 
     class << self
-
       def document_types_request
         {
           headers: HEADERS,
@@ -59,6 +64,17 @@ module ExternalApi
             fail NotImplementedError
           end
         end
+      end
+
+      def aws_client
+        Aws::Comprehend::Client.new(
+          region: REGION,
+          credentials: CREDENTIALS
+        )
+      end
+
+      def get_key_phrases(ocr_data)
+        aws_client.detect_key_phrases(ocr_data).key_phrases
       end
     end
   end
