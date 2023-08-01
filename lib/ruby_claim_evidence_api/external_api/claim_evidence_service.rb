@@ -74,7 +74,11 @@ module ExternalApi
       end
 
       def get_key_phrases(ocr_data)
-        aws_client.detect_key_phrases(ocr_data).key_phrases
+        key_phrase_parameters = {
+          text: ocr_data,
+          language_code: 'en'
+        }
+        aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
       end
     end
   end
