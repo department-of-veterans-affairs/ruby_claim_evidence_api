@@ -4,16 +4,19 @@ require 'aws-sdk'
 
 module ExternalApi
   ## Initializes AWS Client through aws-sdk gem with :text_array and :language_code
-  class AWSComprehendService
+  class AwsComprehendService
     attr_accessor :text_array, :language_code
 
     attr_reader :results
 
-    # TODO: Need to figure out what these environment variables actually are
     # TODO: Need to decide on how to save "score" - save to ENV variable or initialize it with the client?
-    CREDENTIALS = ENV['credentials']
-    REGION = ENV['region']
-    SCORE = ENV['score']
+    CREDENTIALS = Aws::Credentials.new(
+      ENV['AWS_ACCESS_KEY_ID'],
+      ENV['AWS_SECRET_ACCESS_KEY']
+    )
+
+    REGION = ENV['AWS_DEFAULT_REGION']
+    SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     @client = Aws::Comprehend::Client.new(
       region: REGION,
