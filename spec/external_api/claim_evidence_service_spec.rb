@@ -4,9 +4,14 @@ require 'httpi'
 require  "ruby_claim_evidence_api/external_api/claim_evidence_service.rb"
 
 describe ExternalApi::ClaimEvidenceService do
-    let(:notification_url) { "fake.api.vanotify.com" }
+    let(:base_url) { "https://fake.api.claimevidence.com" }
     let(:client_secret) { "SOME-FAKE-KEY" }
-    let(:service_id) { "SOME-FAKE-SERVICE" }
+    let(:doc_uuid) { "SOME-FAKE-UUID" }
+
+    before do
+      ExternalApi::ClaimEvidenceService::BASE_URL = base_url
+      ExternalApi::ClaimEvidenceService::JWT_TOKEN = client_secret
+    end
   
     let(:doc_types_body) { { "documentTypes": [{
         "id": 150,
@@ -77,6 +82,56 @@ describe ExternalApi::ClaimEvidenceService do
         }
       ]}.to_json
     }
+
+    let(:raw_ocr_from_doc_body) {
+      {
+        "currentVersion": {
+          "file": {
+            "pages": [{
+              "lines": [{
+                "geometry": {
+                  "height": 0.4,
+                  "left": 0.5,
+                  "top": 0.5,
+                  "width": 0.4
+                },
+                "pageNumber": 1,
+                "text": "Lorem ipsum ",
+                "words": [{
+                  "confidence": 0.0,
+                  "geometry": {
+                    "height": 0.0,
+                    "left": 0.0,
+                    "top": 0.0,
+                    "width": 0.0
+                  },
+                  "pageNumber": 1,
+                  "text": "Lorem"
+                },
+                {
+                  "confidence": 0.0,
+                  "geometry": {
+                    "height": 0.0,
+                    "left": 0.0,
+                    "top": 0.0,
+                    "width": 0.0
+                  },
+                  "pageNumber": 1,
+                  "text": "ipsum"
+                }]
+              }],
+              "pageNumber": 1,
+              "text": "Lorem ipsum"
+            }],
+            "text": "Lorem ipsum",
+            "totalPages": 1
+          },
+          "processingInformation": {
+            "ocrDateTime": "2023-07-27T14:39:31.965"
+          }
+        }
+      }.to_json
+    }
   
     let(:error_response_body) { { "result": "error", "message": { "token": ["error"] } }.to_json }
   
@@ -86,6 +141,9 @@ describe ExternalApi::ClaimEvidenceService do
   
     let(:success_alt_doc_types_response) do
       HTTPI::Response.new(200, {}, alt_doc_types_body)
+    end
+    let(:success_get_raw_ocr_document_response) do
+      HTTPI::Response.new(200, {}, raw_ocr_from_doc_body)
     end
     let(:error_response) do
       HTTPI::Response.new(400, {}, error_response_body)
@@ -106,19 +164,29 @@ describe ExternalApi::ClaimEvidenceService do
       HTTPI::Response.new(500, {}, error_response_body)
     end
   
-    it "document types" do
-      allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
-      document_types = ExternalApi::ClaimEvidenceService.document_types
-      expect(document_types).to be_present
-    end
+    context "response success" do
+      it "document types" do
+        allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
+        document_types = ExternalApi::ClaimEvidenceService.document_types
+        expect(document_types).to be_present
+      end
+    
+      it "alt_document_types" do
+        allow(HTTPI).to receive(:get).and_return(success_alt_doc_types_response)
+        alt_document_types = ExternalApi::ClaimEvidenceService.alt_document_types
+        expect(alt_document_types).to be_present
+      end
   
-    it "alt_document_types" do
-      allow(HTTPI).to receive(:get).and_return(success_alt_doc_types_response)
-      alt_document_types = ExternalApi::ClaimEvidenceService.alt_document_types
-      expect(alt_document_types).to be_present
+      it "get_ocr_document" do
+        allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
+        get_ocr_document = ExternalApi::ClaimEvidenceService.get_ocr_document(doc_uuid)
+        expect(get_ocr_document).to be_present
+        expect(get_ocr_document).to eq("Lorem ipsum")
+      end
     end
+    
   
-    context "resonse failure" do
+    context "response failure" do
       subject { ExternalApi::ClaimEvidenceService.document_types }
       context "throws fallback error" do
         it "throws ClaimEvidenceApi::Error::ClaimEvidenceApiError" do

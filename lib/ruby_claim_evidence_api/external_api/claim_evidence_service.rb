@@ -4,6 +4,7 @@ require 'pry'
 require 'httpi'
 require 'active_support/all'
 require 'ruby_claim_evidence_api/external_api/response'
+require 'ruby_claim_evidence_api/metrics_service'
 
 module ExternalApi
   class ClaimEvidenceService
@@ -44,7 +45,7 @@ module ExternalApi
         send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Lint/UriEscapeUnescape
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         url = URI.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
@@ -54,12 +55,12 @@ module ExternalApi
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
         request.auth.ssl.ca_cert_file = ENV['SSL_CERT_FILE']
-        request.headers = headers.merge(Authorization: `Bearer #{JWT_TOKEN}`)
+        request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
-        MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
+        # MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+        #                       service: :claim_evidence,
+        #                       name: endpoint) do
           case method
           when :get
             response = HTTPI.get(request)
@@ -71,8 +72,8 @@ module ExternalApi
             fail NotImplementedError
           end
         end
-      end
+      # end
     end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Lint/UriEscapeUnescape
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
   end
 end
