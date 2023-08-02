@@ -9,6 +9,7 @@ module ExternalApi
   class ClaimEvidenceService
     JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
+    CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
     SERVER = '/api/v1/rest'
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     HEADERS = {
@@ -53,7 +54,7 @@ module ExternalApi
         request.read_timeout = 30
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
-        request.auth.ssl.ca_cert_file = ENV['SSL_CERT_FILE']
+        request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
