@@ -47,7 +47,7 @@ module ExternalApi
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
-        url = URI.escape(BASE_URL + SERVER + endpoint)
+        url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
         request.open_timeout = 30
