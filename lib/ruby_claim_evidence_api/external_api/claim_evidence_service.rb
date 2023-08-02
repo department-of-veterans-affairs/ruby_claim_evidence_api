@@ -68,10 +68,11 @@ module ExternalApi
       end
 
       def aws_client
-        Aws::Comprehend::Client.new(
-          region: REGION,
-          credentials: CREDENTIALS
-        )
+        puts REGION, CREDENTIALS
+        # Aws::Comprehend::Client.new(
+        #   region: REGION,
+        #   credentials: CREDENTIALS
+        # )
       end
 
       def get_key_phrases(ocr_data)
