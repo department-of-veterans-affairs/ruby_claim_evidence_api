@@ -4,6 +4,7 @@ require 'pry'
 require 'httpi'
 require 'active_support/all'
 require "ruby_claim_evidence_api/external_api/response.rb"
+require 'aws-sdk'
 
 module ExternalApi
   class ClaimEvidenceService
