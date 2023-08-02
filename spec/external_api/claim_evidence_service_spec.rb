@@ -1,12 +1,18 @@
 # frozen_string_literal: true
 
 require 'httpi'
-require  'ruby_claim_evidence_api/external_api/claim_evidence_service'
+require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
+require 'aws-sdk'
+require './spec/external_api/spec_helper'
 
 describe ExternalApi::ClaimEvidenceService do
   let(:notification_url) { 'fake.api.vanotify.com' }
   let(:client_secret) { 'SOME-FAKE-KEY' }
   let(:service_id) { 'SOME-FAKE-SERVICE' }
+  let(:aws_access_key_id) { 'dummykeyid' }
+  let(:aws_secret_access_key) { 'dummysecretkey' }
+  let(:aws_region) { 'us-gov-west-1' }
+  let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
 
   let(:doc_types_body) { { 'documentTypes': [{
       'id': 150,
@@ -159,21 +165,22 @@ describe ExternalApi::ClaimEvidenceService do
   end
 
   describe 'with Aws Comprehend' do
+    subject { ExternalApi::ClaimEvidenceService }
+    before do
+      ExternalApi::ClaimEvidenceService::REGION = aws_region
+      ExternalApi::ClaimEvidenceService::CREDENTIALS = aws_credentials
+    end
     let!(:aws_client) { subject.aws_client }
 
-    it 'can access environment variables' do
-      expect(ENV['AWS_ACCESS_KEY_ID']).not_to be_nil
-      expect(ENV['AWS_SECRET_ACCESS_KEY']).not_to be_nil
-      expect(ENV['AWS_DEFAULT_REGION']).not_to be_nil
-    end
-
     it 'initializes Aws Comprehend client with region and credentials' do
-      expect(subject.REGION).not_to be_nil
-      expect(subject.CREDENTIALS).not_to be_nil
+      aws_client
+      expect(subject::REGION).not_to be_nil
+      expect(subject::CREDENTIALS).not_to be_nil
       expect(aws_client).not_to be_nil
     end
 
     it 'performs #detect_key_phrase real-time analysis on ocr_data' do
+      #TODO: To replace these variable when merged lol
       expect(aws_client.get_key_phrases(ocr_data)).to eq(stub_response)
     end
   end

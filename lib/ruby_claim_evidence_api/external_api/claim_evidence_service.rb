@@ -8,7 +8,6 @@ require 'aws-sdk'
 
 module ExternalApi
   class ClaimEvidenceService
-
     JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
     BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
     SERVER = "/api/v1/rest"
@@ -51,9 +50,9 @@ module ExternalApi
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
-        MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
+        # MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+        #                       service: :claim_evidence,
+        #                       name: endpoint) do
           case method
           when :get
             response = HTTPI.get(request)
@@ -65,16 +64,14 @@ module ExternalApi
             fail NotImplementedError
           end
         end
-      end
-
+      # end
       def aws_client
-        puts REGION, CREDENTIALS
-        # Aws::Comprehend::Client.new(
-        #   region: REGION,
-        #   credentials: CREDENTIALS
-        # )
+        Aws::Comprehend::Client.new(
+          region: REGION,
+          credentials: CREDENTIALS
+        )
       end
-
+  
       def get_key_phrases(ocr_data)
         key_phrase_parameters = {
           text: ocr_data,
