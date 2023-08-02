@@ -60,7 +60,7 @@ module Fakes
       end
 
       def use_faraday(endpoint:, query: {}, headers: {}, method: :get, body: nil)
-        url = URI.escape(BASE_URL)
+        url = URI::DEFAULT_PARSER.escape(BASE_URL)
         # The certs fail to successfully connect so SSL verification is disabled, but they still need to be present
         # Followed steps at https://github.com/department-of-veterans-affairs/bip-vefs-claimevidence/wiki/Claim-Evidence-Local-Developer-Environment-Setup-Guide#testing-with-postman
         # To set this up and get files
