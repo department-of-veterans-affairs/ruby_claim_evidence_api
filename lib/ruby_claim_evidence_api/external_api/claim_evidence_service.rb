@@ -50,9 +50,9 @@ module ExternalApi
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
-        # MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
-        #                       service: :claim_evidence,
-        #                       name: endpoint) do
+        MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+                              service: :claim_evidence,
+                              name: endpoint) do
           case method
           when :get
             response = HTTPI.get(request)
@@ -64,20 +64,33 @@ module ExternalApi
             fail NotImplementedError
           end
         end
-      # end
+      end
+
       def aws_client
-        Aws::Comprehend::Client.new(
+        @aws_client ||= Aws::Comprehend::Client.new(
           region: REGION,
           credentials: CREDENTIALS
         )
       end
-  
-      def get_key_phrases(ocr_data)
+
+      def aws_stub_client
+        @aws_stub_client ||= Aws::Comprehend::Client.new(
+          region: REGION,
+          credentials: CREDENTIALS,
+          stub_responses: true
+        )
+      end
+
+      def get_key_phrases(ocr_data, stub_response: false)
         key_phrase_parameters = {
           text: ocr_data,
           language_code: 'en'
         }
-        aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
+        if stub_response == true
+          aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
+        else
+          aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
+        end
       end
     end
   end

@@ -14,6 +14,55 @@ describe ExternalApi::ClaimEvidenceService do
   let(:aws_region) { 'us-gov-west-1' }
   let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
 
+  let(:raw_ocr_from_doc_body) {
+    {
+      "currentVersion": {
+        "file": {
+          "pages": [{
+            "lines": [{
+              "geometry": {
+                "height": 0.4,
+                "left": 0.5,
+                "top": 0.5,
+                "width": 0.4
+              },
+              "pageNumber": 1,
+              "text": "Lorem ipsum ",
+              "words": [{
+                "confidence": 0.0,
+                "geometry": {
+                  "height": 0.0,
+                  "left": 0.0,
+                  "top": 0.0,
+                  "width": 0.0
+                },
+                "pageNumber": 1,
+                "text": "Lorem"
+              },
+              {
+                "confidence": 0.0,
+                "geometry": {
+                  "height": 0.0,
+                  "left": 0.0,
+                  "top": 0.0,
+                  "width": 0.0
+                },
+                "pageNumber": 1,
+                "text": "ipsum"
+              }]
+            }],
+            "pageNumber": 1,
+            "text": "Lorem ipsum"
+          }],
+          "text": "Lorem ipsum",
+          "totalPages": 1
+        },
+        "processingInformation": {
+          "ocrDateTime": "2023-07-27T14:39:31.965"
+        }
+      }
+    }.to_json
+  }
   let(:doc_types_body) { { 'documentTypes': [{
       'id': 150,
       'createDateTime': '2012-01-25',
@@ -170,18 +219,51 @@ describe ExternalApi::ClaimEvidenceService do
       ExternalApi::ClaimEvidenceService::REGION = aws_region
       ExternalApi::ClaimEvidenceService::CREDENTIALS = aws_credentials
     end
-    let!(:aws_client) { subject.aws_client }
+    let(:ocr_data) { 'Some text string' }
+    let(:stub_response) do
+      [
+        {
+          score: 0.9825336337089539,
+          text: 'Department',
+          begin_offset: 1,
+          end_offset: 11
+        },
+        {
+          score: 0.9576260447502136,
+          text: "Veterans Affairs\nCERTIFICATION",
+          begin_offset: 15,
+          end_offset: 45
+        },
+        {
+          score: 0.994326651096344,
+          text: "APPEAL\n1A",
+          begin_offset: 49,
+          end_offset: 58
+        }
+      ]
+    end
 
     it 'initializes Aws Comprehend client with region and credentials' do
-      aws_client
       expect(subject::REGION).not_to be_nil
       expect(subject::CREDENTIALS).not_to be_nil
-      expect(aws_client).not_to be_nil
+      expect(subject.aws_client).not_to be_nil
+      expect(subject.aws_stub_client).not_to be_nil
     end
 
     it 'performs #detect_key_phrase real-time analysis on ocr_data' do
       #TODO: To replace these variable when merged lol
-      expect(aws_client.get_key_phrases(ocr_data)).to eq(stub_response)
+      subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
+      # Stubbed data returns an Aws struct - Map the data to a hash compare
+      # Nested method calls require wrapping expect statement in parentheses for proper parsing
+      expect(`subject.get_key_phrases(ocr_data, stub_response: true).map do |struct|
+        {
+          score: struct.score,
+          text: struct.text,
+          begin_offset: struct.begin_offset,
+          end_offset: struct.end_offset
+        }
+      end
+        .to eq(stub_response)`)
     end
   end
 end
