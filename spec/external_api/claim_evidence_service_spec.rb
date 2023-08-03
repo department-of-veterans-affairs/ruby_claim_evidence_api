@@ -6,6 +6,7 @@ require 'aws-sdk'
 require './spec/external_api/spec_helper'
 
 describe ExternalApi::ClaimEvidenceService do
+  # Fake/Testing ENV variables
   let(:notification_url) { 'fake.api.vanotify.com' }
   let(:client_secret) { 'SOME-FAKE-KEY' }
   let(:service_id) { 'SOME-FAKE-SERVICE' }
@@ -14,55 +15,6 @@ describe ExternalApi::ClaimEvidenceService do
   let(:aws_region) { 'us-gov-west-1' }
   let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
 
-  let(:raw_ocr_from_doc_body) {
-    {
-      "currentVersion": {
-        "file": {
-          "pages": [{
-            "lines": [{
-              "geometry": {
-                "height": 0.4,
-                "left": 0.5,
-                "top": 0.5,
-                "width": 0.4
-              },
-              "pageNumber": 1,
-              "text": "Lorem ipsum ",
-              "words": [{
-                "confidence": 0.0,
-                "geometry": {
-                  "height": 0.0,
-                  "left": 0.0,
-                  "top": 0.0,
-                  "width": 0.0
-                },
-                "pageNumber": 1,
-                "text": "Lorem"
-              },
-              {
-                "confidence": 0.0,
-                "geometry": {
-                  "height": 0.0,
-                  "left": 0.0,
-                  "top": 0.0,
-                  "width": 0.0
-                },
-                "pageNumber": 1,
-                "text": "ipsum"
-              }]
-            }],
-            "pageNumber": 1,
-            "text": "Lorem ipsum"
-          }],
-          "text": "Lorem ipsum",
-          "totalPages": 1
-        },
-        "processingInformation": {
-          "ocrDateTime": "2023-07-27T14:39:31.965"
-        }
-      }
-    }.to_json
-  }
   let(:doc_types_body) { { 'documentTypes': [{
       'id': 150,
       'createDateTime': '2012-01-25',
@@ -251,7 +203,6 @@ describe ExternalApi::ClaimEvidenceService do
     end
 
     it 'performs #detect_key_phrase real-time analysis on ocr_data' do
-      #TODO: To replace these variable when merged lol
       subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
       # Stubbed data returns an Aws struct - Map the data to a hash compare
       # Nested method calls require wrapping expect statement in parentheses for proper parsing
