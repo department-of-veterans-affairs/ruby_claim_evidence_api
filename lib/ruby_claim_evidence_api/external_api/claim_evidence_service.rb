@@ -8,6 +8,7 @@ require 'aws-sdk'
 
 module ExternalApi
   class ClaimEvidenceService
+    # Environment Variables
     JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
     BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
     SERVER = "/api/v1/rest"
@@ -20,6 +21,7 @@ module ExternalApi
       ENV['AWS_SECRET_ACCESS_KEY']
     )
     REGION = ENV['AWS_DEFAULT_REGION']
+    SCORE = ENV['SCORE']
 
     class << self
       def document_types_request
@@ -90,6 +92,12 @@ module ExternalApi
           aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
         else
           aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
+        end
+      end
+
+      def filter_key_phrases_by_score(key_phrases)
+        key_phrases.filter_map do |key_phrase|
+          key_phrase[:text] if key_phrase[:score] > SCORE
         end
       end
     end

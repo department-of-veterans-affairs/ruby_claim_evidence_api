@@ -170,6 +170,7 @@ describe ExternalApi::ClaimEvidenceService do
     before do
       ExternalApi::ClaimEvidenceService::REGION = aws_region
       ExternalApi::ClaimEvidenceService::CREDENTIALS = aws_credentials
+      ExternalApi::ClaimEvidenceService::SCORE = 0.95
     end
     let(:ocr_data) { 'Some text string' }
     let(:stub_response) do
@@ -181,7 +182,7 @@ describe ExternalApi::ClaimEvidenceService do
           end_offset: 11
         },
         {
-          score: 0.9576260447502136,
+          score: 0.9376260447502136,
           text: "Veterans Affairs\nCERTIFICATION",
           begin_offset: 15,
           end_offset: 45
@@ -215,6 +216,10 @@ describe ExternalApi::ClaimEvidenceService do
         }
       end
         .to eq(stub_response)`)
+    end
+
+    it 'filters key_phrases by score > 0.95' do
+      expect(subject.filter_key_phrases_by_score(stub_response)).to eq(['Department',"APPEAL\n1A"])
     end
   end
 end
