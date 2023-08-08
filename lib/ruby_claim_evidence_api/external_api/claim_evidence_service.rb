@@ -50,8 +50,8 @@ module ExternalApi
         url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
-        request.open_timeout = 30
-        request.read_timeout = 30
+        request.open_timeout = 60
+        request.read_timeout = 60
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
         request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
