@@ -97,9 +97,7 @@ module ExternalApi
 
       def filter_key_phrases_by_score(key_phrases)
         key_phrases.filter_map do |key_phrase|
-          if !key_phrase[:score].nil? && key_phrase[:score] >= SCORE
-            key_phrase[:text]
-          end
+          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= SCORE
         end
       end
     end
