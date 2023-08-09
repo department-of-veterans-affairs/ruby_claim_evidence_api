@@ -21,7 +21,7 @@ module ExternalApi
       ENV['AWS_SECRET_ACCESS_KEY']
     )
     REGION = ENV['AWS_DEFAULT_REGION']
-    SCORE = ENV['SCORE']
+    SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
       def document_types_request
