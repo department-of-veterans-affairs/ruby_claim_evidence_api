@@ -3,11 +3,14 @@
 require 'pry'
 require 'httpi'
 require 'active_support/all'
-require "ruby_claim_evidence_api/external_api/response.rb"
+require 'ruby_claim_evidence_api/external_api/response.rb'
 require 'aws-sdk'
 
 module ExternalApi
+  # Establishes connection between Claims Evidence API, AWS, and Caseflow
+  # Handles HTTP Requests, Errors, and business logic to Claims Evidnece API
   class ClaimEvidenceService
+    # Environment Variables
     JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
@@ -22,6 +25,7 @@ module ExternalApi
       ENV['AWS_SECRET_ACCESS_KEY']
     )
     REGION = ENV['AWS_DEFAULT_REGION']
+    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
       def document_types_request
@@ -65,9 +69,24 @@ module ExternalApi
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
-        MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
+
+        # Check to see if MetricsService class exists. Required for Caseflow
+        if Object.const_defined?('MetricsService')
+          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+                                service: :claim_evidence,
+                                name: endpoint) do
+            case method
+            when :get
+              response = HTTPI.get(request)
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+
+              service_response
+            else
+              fail NotImplementedError
+            end
+          end
+        else
           case method
           when :get
             response = HTTPI.get(request)
@@ -106,6 +125,18 @@ module ExternalApi
         else
           aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
         end
+      end
+
+      def filter_key_phrases_by_score(key_phrases)
+        key_phrases.filter_map do |key_phrase|
+          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE
+        end
+      end
+
+      def get_key_phrases_from_document(doc_uuid, stub_response: false)
+        ocr_data = get_ocr_document(doc_uuid)
+        key_phrases = get_key_phrases(ocr_data, stub_response)
+        filter_key_phrases_by_score(key_phrases)
       end
     end
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
