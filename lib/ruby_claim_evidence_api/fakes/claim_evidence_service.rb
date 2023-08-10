@@ -38,7 +38,7 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'ruby_claim_evidence_api', 'fakes', 'DOCUMENT_TYPES.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
                    end
 
         if HTTP_PROXY
@@ -52,7 +52,7 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'ruby_claim_evidence_api', 'fakes', 'DOCUMENT_TYPES.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
                    end
 
         if HTTP_PROXY
@@ -66,7 +66,7 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(ocr_document_request(doc_uuid))
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'ruby_claim_evidence_api', 'fakes', 'OCR_DOCUMENT.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'OCR_DOCUMENT.json')))
                    end
 
         if HTTP_PROXY
