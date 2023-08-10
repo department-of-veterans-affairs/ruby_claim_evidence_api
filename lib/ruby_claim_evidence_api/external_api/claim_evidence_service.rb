@@ -53,6 +53,7 @@ module ExternalApi
 
         sleep 1
 
+        # Check to see if MetricsService class exists. Required for Caseflow
         if Object.const_defined?('MetricsService')
           MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
                                 service: :claim_evidence,

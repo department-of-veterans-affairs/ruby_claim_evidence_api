@@ -176,9 +176,7 @@ describe ExternalApi::ClaimEvidenceService do
   describe 'with Aws Comprehend' do
     subject { ExternalApi::ClaimEvidenceService }
     before do
-      if subject::CREDENTIALS.access_key_id.nil?
-        subject::CREDENTIALS = aws_credentials
-      end
+      subject::CREDENTIALS = aws_credentials if subject::CREDENTIALS.access_key_id.nil?
       subject::REGION ||= aws_region
       subject::AWS_COMPREHEND_SCORE ||= 0.95
     end
@@ -227,7 +225,7 @@ describe ExternalApi::ClaimEvidenceService do
       expect(formatted_output).to eq(stub_response)
     end
 
-    it 'filters key_phrases by score > 0.95' do
+    it 'filters key_phrases by score >= AWS_COMPREHEND_SCORE' do
       expect(subject.filter_key_phrases_by_score(stub_response)).to eq(['Department',"APPEAL\n1A"])
     end
   end
