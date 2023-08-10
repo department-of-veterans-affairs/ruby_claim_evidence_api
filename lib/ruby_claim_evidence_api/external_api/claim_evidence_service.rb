@@ -7,6 +7,8 @@ require 'ruby_claim_evidence_api/external_api/response.rb'
 require 'aws-sdk'
 
 module ExternalApi
+  # Establishes connection between Claims Evidence API, AWS, and Caseflow
+  # Handles HTTP Requests, Errors, and business logic to Claims Evidnece API
   class ClaimEvidenceService
     # Environment Variables
     JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
@@ -129,6 +131,12 @@ module ExternalApi
         key_phrases.filter_map do |key_phrase|
           key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE
         end
+      end
+
+      def get_key_phrases_from_document(doc_uuid, stub_response: false)
+        ocr_data = get_ocr_document(doc_uuid)
+        key_phrases = get_key_phrases(ocr_data, stub_response)
+        filter_key_phrases_by_score(key_phrases)
       end
     end
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength

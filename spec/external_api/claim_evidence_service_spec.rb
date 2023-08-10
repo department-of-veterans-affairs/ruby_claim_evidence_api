@@ -243,7 +243,7 @@ describe ExternalApi::ClaimEvidenceService do
     end
   end
 
-  describe 'with Aws Comprehend' do
+  context 'with Aws Comprehend' do
     subject { ExternalApi::ClaimEvidenceService }
     before do
       subject::CREDENTIALS = aws_credentials if subject::CREDENTIALS.access_key_id.nil?
