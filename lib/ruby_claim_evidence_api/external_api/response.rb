@@ -22,7 +22,7 @@ module ExternalApi
       
         # Checks if there is no error
         def success?
-          resp.try(:success?) || !resp.try(:error?)
+          resp.try(:success?)
         end
       
         # Parses response body to an object

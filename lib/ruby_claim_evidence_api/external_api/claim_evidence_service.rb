@@ -9,12 +9,14 @@ require 'aws-sdk'
 module ExternalApi
   class ClaimEvidenceService
     # Environment Variables
-    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
-    BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
-    SERVER = "/api/v1/rest"
-    DOCUMENT_TYPES_ENDPOINT = "/documenttypes"
+    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
+    BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
+    CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
+    SERVER = '/api/v1/rest'
+    DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     HEADERS = {
-      "Content-Type": "application/json", Accept: "application/json"
+      "Content-Type": 'application/json',
+      "Accept": '*/*'
     }.freeze
     CREDENTIALS = Aws::Credentials.new(
       ENV['AWS_ACCESS_KEY_ID'],
@@ -32,23 +34,36 @@ module ExternalApi
         }
       end
 
+      def ocr_document_request(doc_uuid)
+        {
+          headers: HEADERS.merge("Content-Type": 'application/x-www-form-urlencoded'),
+          endpoint: "/files/#{doc_uuid}/data/ocr",
+          method: :get
+        }
+      end
+
       def document_types
-        send_ce_api_request(document_types_request).body["documentTypes"]
+        send_ce_api_request(document_types_request).body['documentTypes']
       end
 
       def alt_document_types
-        send_ce_api_request(document_types_request).body["alternativeDocumentTypes"]
+        send_ce_api_request(document_types_request).body['alternativeDocumentTypes']
       end
 
-      def send_ce_api_request(query: {}, headers: {}, endpoint:, method: :get, body: nil)
-        url = URI.escape(BASE_URL + SERVER + endpoint)
+      def get_ocr_document(doc_uuid)
+        send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
+        url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
         request.open_timeout = 30
         request.read_timeout = 30
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
-        request.auth.ssl.ca_cert_file = ENV["SSL_CERT_FILE"]
+        request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
@@ -116,5 +131,6 @@ module ExternalApi
         end
       end
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
   end
 end
