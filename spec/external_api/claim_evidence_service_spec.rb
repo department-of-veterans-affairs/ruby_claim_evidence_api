@@ -114,6 +114,14 @@ describe ExternalApi::ClaimEvidenceService do
     HTTPI::Response.new(500, {}, error_response_body)
   end
 
+  before do
+    ExternalApi::ClaimEvidenceService::BASE_URL ||= 'https://vefs-claimevidence-dev.dev.bip.va.gov'
+    ExternalApi::ClaimEvidenceService::JWT_TOKEN ||= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3NmQxOWE2OC03MDA1LTR
+    hNjgtOWEzNC03MzEzZmI0MjMzNzMiLCJpYXQiOjE1MTYyMzkwMjIsImlzcyI6ImRldmVsb3BlclRlc3RpbmciLCJhcHBsaWNhdGlvbklEIjoiVkJNUy1
+    VSSIsInVzZXJJRCI6ImNob3dhcl9zc3VwZXIiLCJzdGF0aW9uSUQiOiIzMTcifQ.33CyN4lq3WnyON2F4m4SlctTBtonBaySjf_7NDCBLl4'
+  end
+
+
   it 'document types' do
     allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
     document_types = ExternalApi::ClaimEvidenceService.document_types
@@ -168,9 +176,11 @@ describe ExternalApi::ClaimEvidenceService do
   describe 'with Aws Comprehend' do
     subject { ExternalApi::ClaimEvidenceService }
     before do
-      ExternalApi::ClaimEvidenceService::REGION = aws_region
-      ExternalApi::ClaimEvidenceService::CREDENTIALS = aws_credentials
-      ExternalApi::ClaimEvidenceService::SCORE = 0.95
+      if subject::CREDENTIALS.access_key_id.nil?
+        subject::CREDENTIALS = aws_credentials
+      end
+      subject::REGION ||= aws_region
+      subject::AWS_COMPREHEND_SCORE ||= 0.95
     end
     let(:ocr_data) { 'Some text string' }
     let(:stub_response) do
@@ -206,8 +216,7 @@ describe ExternalApi::ClaimEvidenceService do
     it 'performs #detect_key_phrase real-time analysis on ocr_data' do
       subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
       # Stubbed data returns an Aws struct - Map the data to a hash compare
-      # Nested method calls require wrapping expect statement in parentheses for proper parsing
-      expect(`subject.get_key_phrases(ocr_data, stub_response: true).map do |struct|
+      formatted_output = subject.get_key_phrases(ocr_data, stub_response: true).map do |struct|
         {
           score: struct.score,
           text: struct.text,
@@ -215,7 +224,7 @@ describe ExternalApi::ClaimEvidenceService do
           end_offset: struct.end_offset
         }
       end
-        .to eq(stub_response)`)
+      expect(formatted_output).to eq(stub_response)
     end
 
     it 'filters key_phrases by score > 0.95' do

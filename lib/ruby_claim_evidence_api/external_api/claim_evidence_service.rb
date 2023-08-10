@@ -3,7 +3,7 @@
 require 'pry'
 require 'httpi'
 require 'active_support/all'
-require "ruby_claim_evidence_api/external_api/response.rb"
+require 'ruby_claim_evidence_api/external_api/response.rb'
 require 'aws-sdk'
 
 module ExternalApi
@@ -21,7 +21,7 @@ module ExternalApi
       ENV['AWS_SECRET_ACCESS_KEY']
     )
     REGION = ENV['AWS_DEFAULT_REGION']
-    SCORE = ENV['AWS_COMPREHEND_SCORE']
+    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
       def document_types_request
@@ -52,9 +52,23 @@ module ExternalApi
         request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
 
         sleep 1
-        MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
+
+        if Object.const_defined?('MetricsService')
+          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+                                service: :claim_evidence,
+                                name: endpoint) do
+            case method
+            when :get
+              response = HTTPI.get(request)
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+
+              service_response
+            else
+              fail NotImplementedError
+            end
+          end
+        else
           case method
           when :get
             response = HTTPI.get(request)
@@ -97,7 +111,7 @@ module ExternalApi
 
       def filter_key_phrases_by_score(key_phrases)
         key_phrases.filter_map do |key_phrase|
-          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= SCORE
+          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE
         end
       end
     end
