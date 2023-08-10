@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'ruby_claim_evidence_api/external_api/response'
 module Fakes
   class ClaimEvidenceService
     JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
@@ -8,8 +9,12 @@ module Fakes
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     # this must start with http://
     HTTP_PROXY = ENV['DEVVPN_PROXY']
+    CERT_LOCATION = ENV['SSL_CERT_FILE']
+    KEY_LOCATION = ENV['CLAIM_EVIDENCE_KEY_FILE']
+    CERT_PASSWORD = ENV['CLAIM_EVIDENCE_CERT_PASSPHRASE']
     HEADERS = {
-      "Content-Type": 'application/json', Accept: 'application/json'
+      "Content-Type": 'application/json',
+      "Accept": '*/*'
     }.freeze
 
     class << self
@@ -23,7 +28,7 @@ module Fakes
 
       def ocr_document_request(doc_uuid)
         {
-          headers: HEADERS,
+          headers: HEADERS.merge("Content-Type": 'application/x-www-form-urlencoded'),
           endpoint: "/files/#{doc_uuid}/data/ocr",
           method: :get
         }
@@ -33,30 +38,42 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'ruby_claim_evidence_api', 'fakes', 'DOCUMENT_TYPES.json')))
                    end
 
-        response.body['documentTypes']
+        if HTTP_PROXY
+          response.body['documentTypes']
+        else
+          response['documentTypes']
+        end
       end
 
       def alt_document_types
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'ruby_claim_evidence_api', 'fakes', 'DOCUMENT_TYPES.json')))
                    end
 
-        response.body['alternativeDocumentTypes']
+        if HTTP_PROXY
+          response.body['alternativeDocumentTypes']
+        else
+          response['alternativeDocumentTypes']
+        end
       end
 
       def get_ocr_document(doc_uuid)
         response = if HTTP_PROXY
                      use_faraday(ocr_document_request(doc_uuid))
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'OCR_DOCUMENT.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'ruby_claim_evidence_api', 'fakes', 'OCR_DOCUMENT.json')))
                    end
 
-        response.body['currentVersion']['file']['text']
+        if HTTP_PROXY
+          response.body['currentVersion']['file']['text']
+        else
+          response['currentVersion']['file']['text']
+        end
       end
 
       def use_faraday(endpoint:, query: {}, headers: {}, method: :get, body: nil)
@@ -64,9 +81,9 @@ module Fakes
         # The certs fail to successfully connect so SSL verification is disabled, but they still need to be present
         # Followed steps at https://github.com/department-of-veterans-affairs/bip-vefs-claimevidence/wiki/Claim-Evidence-Local-Developer-Environment-Setup-Guide#testing-with-postman
         # To set this up and get files
-        client_cert = OpenSSL::X509::Certificate.new(File.read(ENV['SSL_CERT_FILE']))
-        client_key = OpenSSL::PKey::RSA.new(File.read(ENV['CLAIM_EVIDENCE_KEY_FILE']),
-                                            ENV['CLAIM_EVIDENCE_KEY_PASSPHRASE'])
+        client_cert = OpenSSL::X509::Certificate.new(File.read(CERT_LOCATION))
+        client_key = OpenSSL::PKey::RSA.new(File.read(KEY_LOCATION),
+                                            CERT_PASSWORD)
         # Have to use Faraday as HTTPI does not allow proxies to be setup correctly
         # Have to start devvpn for this to work
         conn = Faraday.new(
@@ -91,7 +108,7 @@ module Fakes
           when :get
             response = conn.get(SERVER + endpoint, query)
             service_response = ExternalApi::Response.new(response)
-            raise service_response.error if service_response.error.present?
+            fail service_response.error if service_response.error.present?
 
             service_response
           when :post
