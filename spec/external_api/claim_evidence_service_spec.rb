@@ -298,5 +298,12 @@ describe ExternalApi::ClaimEvidenceService do
     it 'filters key_phrases by score >= AWS_COMPREHEND_SCORE' do
       expect(subject.filter_key_phrases_by_score(stub_response)).to eq(['Department',"APPEAL\n1A"])
     end
+
+    it 'retrieves key_phrases from CE API document' do
+      subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
+      allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
+      output = subject.get_key_phrases_from_document(doc_uuid, stub_response: true)
+      expect(output).to eq(['Department',"APPEAL\n1A"])
+    end
   end
 end
