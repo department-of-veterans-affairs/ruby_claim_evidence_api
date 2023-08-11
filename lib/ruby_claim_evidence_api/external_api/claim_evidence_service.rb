@@ -135,7 +135,7 @@ module ExternalApi
 
       def get_key_phrases_from_document(doc_uuid, stub_response: false)
         ocr_data = get_ocr_document(doc_uuid)
-        key_phrases = get_key_phrases(ocr_data, stub_response)
+        key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
         filter_key_phrases_by_score(key_phrases)
       end
     end
