@@ -11,7 +11,8 @@ module ExternalApi
   # Handles HTTP Requests, Errors, and business logic to Claims Evidnece API
   class ClaimEvidenceService
     # Environment Variables
-    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
+    CLIENT_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
+    CLIENT_ISSUER = ENV['CLAIM_EVIDENCE_ISSUER']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
     SERVER = '/api/v1/rest'
@@ -58,6 +59,9 @@ module ExternalApi
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
+
+        token = generate_jwt_token
+
         url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
@@ -66,13 +70,13 @@ module ExternalApi
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
         request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
-        request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
+        request.headers = headers.merge(Authorization: "Bearer #{token}")
 
         sleep 1
 
         # Check to see if MetricsService class exists. Required for Caseflow
         if Object.const_defined?('MetricsService')
-          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url} with token: #{token}",
                                 service: :claim_evidence,
                                 name: endpoint) do
             case method
@@ -98,6 +102,26 @@ module ExternalApi
             fail NotImplementedError
           end
         end
+      end
+
+      def generate_jwt_token
+        header = {
+          typ: 'JWT',
+          alg: 'HS256'
+        }
+        current_timestamp = DateTime.now.strfttime('%Q').to_i / 1000.floor
+        data = {
+          iss: CLIENT_ISSUER,
+          iat: current_timestamp
+        }
+        stringified_header = header.to_json.encode('UTF-8')
+        encoded_header = base64url(stringified_header)
+        stringified_data = data.to_json.encode('UTF-8')
+        encoded_data = base64url(stringified_data)
+        token = "#{encoded_header}.#{encoded_data}"
+        signature = OpenSSL::HMAC.digest('SHA256', CLIENT_SECRET, token)
+
+        "#{token}.#{base64url(signature)}"
       end
 
       def aws_client
