@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 require 'ruby_claim_evidence_api/external_api/response'
-require 'base64'
 module Fakes
   class ClaimEvidenceService
-    CLIENT_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
-    CLIENT_ISSUER = ENV['CLAIM_EVIDENCE_ISSUER']
+    TOKEN_SECRET = ENV['JWT_SECRET']
+    TOKEN_ISSUER = ENV['JWT_ISSUER']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     SERVER = '/api/v1/rest'
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
@@ -143,27 +142,19 @@ module Fakes
         data = {
           jti: "",
           iat: current_timestamp,
-          iss: CLIENT_ISSUER,
-          applicationId: CLIENT_ISSUER,
+          iss: TOKEN_ISSUER,
+          applicationId: TOKEN_ISSUER,
           userID: "",
           stationID: ""
         }
         stringified_header = header.to_json.encode('UTF-8')
-        encoded_header = base64url(stringified_header)
+        encoded_header = Encoder.encode64(stringified_header)
         stringified_data = data.to_json.encode('UTF-8')
-        encoded_data = base64url(stringified_data)
+        encoded_data = Encoder.encode64(stringified_data)
         token = "#{encoded_header}.#{encoded_data}"
-        signature = OpenSSL::HMAC.digest('SHA256', CLIENT_SECRET, token)
-        signature = base64url(signature)
+        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
+        signature = Encoder.encode64(signature)
         "#{token}.#{signature}"
-      end
-
-      def base64url(source)
-        encoded_source = Base64.encode64(source)
-        encoded_source = encoded_source.sub(/=+$/, '')
-        encoded_source = encoded_source.tr('+', '-')
-        encoded_source = encoded_source.tr('/', '_')
-        encoded_source
       end
 
       def aws_client

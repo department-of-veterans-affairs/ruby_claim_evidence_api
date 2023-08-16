@@ -11,8 +11,8 @@ module ExternalApi
   # Handles HTTP Requests, Errors, and business logic to Claims Evidnece API
   class ClaimEvidenceService
     # Environment Variables
-    CLIENT_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
-    CLIENT_ISSUER = ENV['CLAIM_EVIDENCE_ISSUER']
+    TOKEN_SECRET = ENV['JWT_SECRET']
+    TOKEN_ISSUER = ENV['JWT_ISSUER']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
     SERVER = '/api/v1/rest'
@@ -111,15 +111,19 @@ module ExternalApi
         }
         current_timestamp = DateTime.now.strfttime('%Q').to_i / 1000.floor
         data = {
-          iss: CLIENT_ISSUER,
-          iat: current_timestamp
+          jti: "",
+          iat: current_timestamp,
+          iss: TOKEN_ISSUER,
+          applicationId: TOKEN_ISSUER,
+          userID: "",
+          stationID: ""
         }
         stringified_header = header.to_json.encode('UTF-8')
-        encoded_header = base64url(stringified_header)
+        encoded_header = Encoder.encode64(stringified_header)
         stringified_data = data.to_json.encode('UTF-8')
-        encoded_data = base64url(stringified_data)
+        encoded_data = Encoder.encode64(stringified_data)
         token = "#{encoded_header}.#{encoded_data}"
-        signature = OpenSSL::HMAC.digest('SHA256', CLIENT_SECRET, token)
+        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
 
         "#{token}.#{base64url(signature)}"
       end
