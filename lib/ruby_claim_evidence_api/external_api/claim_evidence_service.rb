@@ -104,37 +104,6 @@ module ExternalApi
         end
       end
 
-      def generate_jwt_token
-        header = {
-          typ: 'JWT',
-          alg: 'HS256'
-        }
-        current_timestamp = DateTime.now.strftime('%Q').to_i / 1000.floor
-        data = {
-          jti: SecureRandom.uuid,
-          iat: current_timestamp,
-          iss: TOKEN_ISSUER,
-          applicationId: TOKEN_ISSUER,
-          userID: '', # VBMS User ID
-          stationID: '' # VBMS Station ID
-        }
-        stringified_header = header.to_json.encode('UTF-8')
-        encoded_header = base64url(stringified_header)
-        stringified_data = data.to_json.encode('UTF-8')
-        encoded_data = base64url(stringified_data)
-        token = "#{encoded_header}.#{encoded_data}"
-        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
-
-        "#{token}.#{base64url(signature)}"
-      end
-
-      def base64url(source)
-        encoded_source = Base64.encode64(source)
-        encoded_source = encoded_source.sub(/=+$/, '')
-        encoded_source = encoded_source.tr('+', '-')
-        encoded_source.tr('/', '_')
-      end
-
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
           region: REGION,
@@ -172,6 +141,39 @@ module ExternalApi
         ocr_data = get_ocr_document(doc_uuid)
         key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
         filter_key_phrases_by_score(key_phrases)
+      end
+
+      private
+
+      def generate_jwt_token
+        header = {
+          typ: 'JWT',
+          alg: 'HS256'
+        }
+        current_timestamp = DateTime.now.strftime('%Q').to_i / 1000.floor
+        data = {
+          jti: SecureRandom.uuid,
+          iat: current_timestamp,
+          iss: TOKEN_ISSUER,
+          applicationId: TOKEN_ISSUER,
+          userID: '', # VBMS User ID
+          stationID: '' # VBMS Station ID
+        }
+        stringified_header = header.to_json.encode('UTF-8')
+        encoded_header = base64url(stringified_header)
+        stringified_data = data.to_json.encode('UTF-8')
+        encoded_data = base64url(stringified_data)
+        token = "#{encoded_header}.#{encoded_data}"
+        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
+
+        "#{token}.#{base64url(signature)}"
+      end
+
+      def base64url(source)
+        encoded_source = Base64.encode64(source)
+        encoded_source = encoded_source.sub(/=+$/, '')
+        encoded_source = encoded_source.tr('+', '-')
+        encoded_source.tr('/', '_')
       end
     end
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
