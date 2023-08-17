@@ -111,12 +111,12 @@ module ExternalApi
         }
         current_timestamp = DateTime.now.strfttime('%Q').to_i / 1000.floor
         data = {
-          jti: "",
+          jti: SecureRandom.uuid,
           iat: current_timestamp,
           iss: TOKEN_ISSUER,
           applicationId: TOKEN_ISSUER,
-          userID: "",
-          stationID: ""
+          userID: '', # VBMS User ID
+          stationID: '' # VBMS Station ID
         }
         stringified_header = header.to_json.encode('UTF-8')
         encoded_header = base64url(stringified_header)

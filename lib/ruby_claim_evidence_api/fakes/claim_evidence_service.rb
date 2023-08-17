@@ -3,7 +3,7 @@
 require 'ruby_claim_evidence_api/external_api/response'
 module Fakes
   class ClaimEvidenceService
-    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
+    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     SERVER = '/api/v1/rest'
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
@@ -94,7 +94,7 @@ module Fakes
         # Have to start devvpn for this to work
         conn = Faraday.new(
           url: url,
-          headers: headers.merge(Authorization: "Bearer #{token}"),
+          headers: headers.merge(Authorization: "Bearer #{JWT_TOKEN}"),
           proxy: HTTP_PROXY,
           ssl: {
             client_cert: client_cert,
@@ -107,7 +107,7 @@ module Fakes
         end
 
         sleep 1
-        MetricsService.record("api.fakes.notifications.claim.evidence #{method.to_s.upcase} request to #{url} with token: #{JWT_TOKEN}",
+        MetricsService.record("api.fakes.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
                               service: :claim_evidence,
                               name: endpoint) do
           case method
