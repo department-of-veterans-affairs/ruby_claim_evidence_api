@@ -109,7 +109,7 @@ module ExternalApi
           typ: 'JWT',
           alg: 'HS256'
         }
-        current_timestamp = DateTime.now.strfttime('%Q').to_i / 1000.floor
+        current_timestamp = DateTime.now.strftime('%Q').to_i / 1000.floor
         data = {
           jti: SecureRandom.uuid,
           iat: current_timestamp,
