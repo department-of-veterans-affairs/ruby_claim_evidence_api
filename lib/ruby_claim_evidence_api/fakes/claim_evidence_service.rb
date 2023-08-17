@@ -3,8 +3,7 @@
 require 'ruby_claim_evidence_api/external_api/response'
 module Fakes
   class ClaimEvidenceService
-    TOKEN_SECRET = ENV['JWT_SECRET']
-    TOKEN_ISSUER = ENV['JWT_ISSUER']
+    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     SERVER = '/api/v1/rest'
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
@@ -84,9 +83,6 @@ module Fakes
       end
 
       def use_faraday(endpoint:, query: {}, headers: {}, method: :get, body: nil)
-
-        token = generate_jwt_token
-        
         url = URI::DEFAULT_PARSER.escape(BASE_URL)
         # The certs fail to successfully connect so SSL verification is disabled, but they still need to be present
         # Followed steps at https://github.com/department-of-veterans-affairs/bip-vefs-claimevidence/wiki/Claim-Evidence-Local-Developer-Environment-Setup-Guide#testing-with-postman
@@ -111,7 +107,7 @@ module Fakes
         end
 
         sleep 1
-        MetricsService.record("api.fakes.notifications.claim.evidence #{method.to_s.upcase} request to #{url} with token: #{token}",
+        MetricsService.record("api.fakes.notifications.claim.evidence #{method.to_s.upcase} request to #{url} with token: #{JWT_TOKEN}",
                               service: :claim_evidence,
                               name: endpoint) do
           case method
@@ -131,30 +127,6 @@ module Fakes
             fail NotImplementedError
           end
         end
-      end
-
-      def generate_jwt_token
-        header = {
-          typ: 'JWT',
-          alg: 'HS256'
-        }
-        current_timestamp = DateTime.now.strftime('%Q').to_i / 1000.floor
-        data = {
-          jti: "",
-          iat: current_timestamp,
-          iss: TOKEN_ISSUER,
-          applicationId: TOKEN_ISSUER,
-          userID: "",
-          stationID: ""
-        }
-        stringified_header = header.to_json.encode('UTF-8')
-        encoded_header = Encoder.encode64(stringified_header)
-        stringified_data = data.to_json.encode('UTF-8')
-        encoded_data = Encoder.encode64(stringified_data)
-        token = "#{encoded_header}.#{encoded_data}"
-        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
-        signature = Encoder.encode64(signature)
-        "#{token}.#{signature}"
       end
 
       def aws_client
