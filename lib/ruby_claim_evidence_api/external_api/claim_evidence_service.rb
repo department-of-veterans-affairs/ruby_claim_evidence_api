@@ -9,7 +9,7 @@ require 'base64'
 
 module ExternalApi
   # Establishes connection between Claims Evidence API, AWS, and Caseflow
-  # Handles HTTP Requests, Errors, and business logic to Claims Evidnece API
+  # Handles HTTP Requests, Errors, and business logic to Claims Evidence API
   class ClaimEvidenceService
     # Environment Variables
     TOKEN_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
@@ -76,7 +76,7 @@ module ExternalApi
 
         # Check to see if MetricsService class exists. Required for Caseflow
         if Object.const_defined?('MetricsService')
-          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url} with token: #{jwt_token}",
+          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
                                 service: :claim_evidence,
                                 name: endpoint) do
             case method
