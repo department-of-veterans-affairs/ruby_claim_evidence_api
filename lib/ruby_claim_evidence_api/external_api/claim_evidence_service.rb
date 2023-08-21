@@ -14,6 +14,8 @@ module ExternalApi
     # Environment Variables
     TOKEN_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
     TOKEN_ISSUER = ENV['CLAIM_EVIDENCE_ISSUER']
+    TOKEN_USER = ENV['CLAIM_EVIDENCE_VBMS_USER']
+    TOKEN_STATION_ID = ENV['CLAIM_EVIDENCE_STATION_ID']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
     SERVER = '/api/v1/rest'
@@ -40,7 +42,7 @@ module ExternalApi
 
       def ocr_document_request(doc_uuid)
         {
-          headers: HEADERS.merge("Content-Type": 'application/x-www-form-urlencoded'),
+          headers: HEADERS,
           endpoint: "/files/#{doc_uuid}/data/ocr",
           method: :get
         }
@@ -156,8 +158,8 @@ module ExternalApi
           iat: current_timestamp,
           iss: TOKEN_ISSUER,
           applicationId: TOKEN_ISSUER,
-          userID: '', # VBMS User ID
-          stationID: '' # VBMS Station ID
+          userID: TOKEN_USER,
+          stationID: TOKEN_STATION_ID
         }
         stringified_header = header.to_json.encode('UTF-8')
         encoded_header = base64url(stringified_header)
