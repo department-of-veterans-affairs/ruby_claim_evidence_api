@@ -158,7 +158,7 @@ module ExternalApi
           iat: current_timestamp,
           iss: TOKEN_ISSUER,
           applicationId: TOKEN_ISSUER,
-          userID: 'CSFLOW'
+          userId: 'CSFLOW'
         }
         stringified_header = header.to_json.encode('UTF-8')
         encoded_header = base64url(stringified_header)
