@@ -5,13 +5,17 @@ require 'httpi'
 require 'active_support/all'
 require 'ruby_claim_evidence_api/external_api/response.rb'
 require 'aws-sdk'
+require 'base64'
 
 module ExternalApi
   # Establishes connection between Claims Evidence API, AWS, and Caseflow
-  # Handles HTTP Requests, Errors, and business logic to Claims Evidnece API
+  # Handles HTTP Requests, Errors, and business logic to Claims Evidence API
   class ClaimEvidenceService
     # Environment Variables
-    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
+    TOKEN_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
+    TOKEN_ISSUER = ENV['CLAIM_EVIDENCE_ISSUER']
+    TOKEN_USER = ENV['CLAIM_EVIDENCE_VBMS_USER']
+    TOKEN_STATION_ID = ENV['CLAIM_EVIDENCE_STATION_ID']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
     SERVER = '/api/v1/rest'
@@ -38,7 +42,7 @@ module ExternalApi
 
       def ocr_document_request(doc_uuid)
         {
-          headers: HEADERS.merge("Content-Type": 'application/x-www-form-urlencoded'),
+          headers: HEADERS,
           endpoint: "/files/#{doc_uuid}/data/ocr",
           method: :get
         }
@@ -58,6 +62,8 @@ module ExternalApi
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
+        jwt_token = generate_jwt_token
+
         url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
@@ -66,7 +72,7 @@ module ExternalApi
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
         request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
-        request.headers = headers.merge(Authorization: "Bearer " + JWT_TOKEN)
+        request.headers = headers.merge(Authorization: "Bearer #{jwt_token}")
 
         sleep 1
 
@@ -137,6 +143,38 @@ module ExternalApi
         ocr_data = get_ocr_document(doc_uuid)
         key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
         filter_key_phrases_by_score(key_phrases)
+      end
+
+      private
+
+      def generate_jwt_token
+        header = {
+          typ: 'JWT',
+          alg: 'HS256'
+        }
+        current_timestamp = DateTime.now.strftime('%Q').to_i / 1000.floor
+        data = {
+          jti: SecureRandom.uuid,
+          iat: current_timestamp,
+          iss: TOKEN_ISSUER,
+          applicationId: TOKEN_ISSUER,
+          userId: 'CSFLOW'
+        }
+        stringified_header = header.to_json.encode('UTF-8')
+        encoded_header = base64url(stringified_header)
+        stringified_data = data.to_json.encode('UTF-8')
+        encoded_data = base64url(stringified_data)
+        token = "#{encoded_header}.#{encoded_data}"
+        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
+
+        "#{token}.#{base64url(signature)}"
+      end
+
+      def base64url(source)
+        encoded_source = Base64.encode64(source)
+        encoded_source = encoded_source.sub(/=+$/, '')
+        encoded_source = encoded_source.tr('+', '-')
+        encoded_source.tr('/', '_')
       end
     end
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength

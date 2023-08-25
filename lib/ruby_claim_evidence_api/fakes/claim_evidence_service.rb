@@ -94,7 +94,7 @@ module Fakes
         # Have to start devvpn for this to work
         conn = Faraday.new(
           url: url,
-          headers: headers.merge(Authorization: 'Bearer ' + JWT_TOKEN),
+          headers: headers.merge(Authorization: "Bearer #{JWT_TOKEN}"),
           proxy: HTTP_PROXY,
           ssl: {
             client_cert: client_cert,
@@ -128,6 +128,7 @@ module Fakes
           end
         end
       end
+
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
           region: REGION,

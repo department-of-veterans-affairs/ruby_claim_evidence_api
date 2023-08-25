@@ -69,7 +69,7 @@ module ExternalApi
       return 'No error message from ClaimEvidence' if body.empty?
 
       if code == 401
-        body['message']['token'][0] if code == 401
+        body['message']['messages']['text'] if code == 401
       end
 
       body['message'] || body['errors'][0]['message']
