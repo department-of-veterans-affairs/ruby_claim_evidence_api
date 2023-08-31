@@ -146,7 +146,7 @@ module ExternalApi
       end
 
       private
-
+      
       def generate_jwt_token
         header = {
           typ: 'JWT',
@@ -158,7 +158,8 @@ module ExternalApi
           iat: current_timestamp,
           iss: TOKEN_ISSUER,
           applicationId: TOKEN_ISSUER,
-          userId: 'CSFLOW'
+          userID: TOKEN_USER,
+          stationID: TOKEN_STATION_ID
         }
         stringified_header = header.to_json.encode('UTF-8')
         encoded_header = base64url(stringified_header)
