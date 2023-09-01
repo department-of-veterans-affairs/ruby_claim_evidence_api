@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'Faraday'
+require 'faraday'
 require 'active_support/all'
 require 'ruby_claim_evidence_api/error'
 
