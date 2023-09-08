@@ -18,7 +18,6 @@ describe ExternalApi::ClaimEvidenceService do
 
   before do
     ExternalApi::ClaimEvidenceService::BASE_URL = base_url
-    ExternalApi::ClaimEvidenceService::JWT_TOKEN = client_secret
   end
 
   let(:doc_types_body) { { 'documentTypes': [{
