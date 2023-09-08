@@ -72,7 +72,7 @@ module ExternalApi
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
         request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
-        request.auth.ssl.cert_file = ENV['BGS_LOCATION']
+        request.auth.ssl.cert_file = ENV['BGS_CERT_LOCATION']
         request.auth.ssl.cert_key_file = ENV['BGS_KEY_LOCATION']
         request.headers = headers.merge(Authorization: "Bearer #{jwt_token}")
 
