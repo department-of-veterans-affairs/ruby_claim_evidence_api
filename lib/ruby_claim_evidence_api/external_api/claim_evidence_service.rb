@@ -18,17 +18,13 @@ module ExternalApi
     TOKEN_STATION_ID = ENV['CLAIM_EVIDENCE_STATION_ID']
     BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
     CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
-    SERVER = '/api/v1/rest'
+    SERVER = 'api/v1/rest'
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     HEADERS = {
       "Content-Type": 'application/json',
       "Accept": '*/*'
     }.freeze
-    CREDENTIALS = Aws::Credentials.new(
-      ENV['AWS_ACCESS_KEY_ID'],
-      ENV['AWS_SECRET_ACCESS_KEY']
-    )
-    REGION = ENV['AWS_DEFAULT_REGION']
+    REGION = ENV['AWS_REGION']
     AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
@@ -111,14 +107,12 @@ module ExternalApi
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
           region: REGION,
-          credentials: CREDENTIALS
         )
       end
 
       def aws_stub_client
         @aws_stub_client ||= Aws::Comprehend::Client.new(
           region: REGION,
-          credentials: CREDENTIALS,
           stub_responses: true
         )
       end
@@ -148,7 +142,7 @@ module ExternalApi
       end
 
       private
-      
+
       def generate_jwt_token
         header = {
           typ: 'JWT',

@@ -18,7 +18,6 @@ describe ExternalApi::ClaimEvidenceService do
 
   before do
     ExternalApi::ClaimEvidenceService::BASE_URL = base_url
-    ExternalApi::ClaimEvidenceService::JWT_TOKEN = client_secret
   end
 
   let(:doc_types_body) { { 'documentTypes': [{
@@ -176,27 +175,23 @@ describe ExternalApi::ClaimEvidenceService do
     HTTPI::Response.new(500, {}, error_response_body)
   end
 
-  before do
-    ExternalApi::ClaimEvidenceService::BASE_URL ||= 'https://vefs-claimevidence-dev.dev.bip.va.gov'
-    ExternalApi::ClaimEvidenceService::JWT_TOKEN ||= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3NmQxOWE2OC03MDA1LTR
-    hNjgtOWEzNC03MzEzZmI0MjMzNzMiLCJpYXQiOjE1MTYyMzkwMjIsImlzcyI6ImRldmVsb3BlclRlc3RpbmciLCJhcHBsaWNhdGlvbklEIjoiVkJNUy1
-    VSSIsInVzZXJJRCI6ImNob3dhcl9zc3VwZXIiLCJzdGF0aW9uSUQiOiIzMTcifQ.33CyN4lq3WnyON2F4m4SlctTBtonBaySjf_7NDCBLl4'
-  end
-
   context 'response success' do
     it 'document types' do
+      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
       document_types = ExternalApi::ClaimEvidenceService.document_types
       expect(document_types).to be_present
     end
 
     it 'alt_document_types' do
+      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_alt_doc_types_response)
       alt_document_types = ExternalApi::ClaimEvidenceService.alt_document_types
       expect(alt_document_types).to be_present
     end
 
     it 'get_ocr_document' do
+      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
       get_ocr_document = ExternalApi::ClaimEvidenceService.get_ocr_document(doc_uuid)
       expect(get_ocr_document).to be_present
@@ -208,6 +203,7 @@ describe ExternalApi::ClaimEvidenceService do
     subject { ExternalApi::ClaimEvidenceService.document_types }
     context 'throws fallback error' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceApiError' do
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(error_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
       end
@@ -215,6 +211,7 @@ describe ExternalApi::ClaimEvidenceService do
 
     context '401' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError' do
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(unauthorized_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
       end
@@ -222,6 +219,7 @@ describe ExternalApi::ClaimEvidenceService do
 
     context '403' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError' do
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(forbidden_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
       end
@@ -229,6 +227,7 @@ describe ExternalApi::ClaimEvidenceService do
 
     context '404' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError' do
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(not_found_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
       end
@@ -237,6 +236,7 @@ describe ExternalApi::ClaimEvidenceService do
     context '500' do
       let!(:error_code) { 500 }
       it 'throws ClaimEvidenceApi::Error:ClaimEvidenceInternalServerError' do
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(internal_server_error_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
       end
@@ -246,7 +246,6 @@ describe ExternalApi::ClaimEvidenceService do
   context 'with Aws Comprehend' do
     subject { ExternalApi::ClaimEvidenceService }
     before do
-      subject::CREDENTIALS = aws_credentials if subject::CREDENTIALS.access_key_id.nil?
       subject::REGION ||= aws_region
       subject::AWS_COMPREHEND_SCORE ||= 0.95
     end
@@ -274,9 +273,8 @@ describe ExternalApi::ClaimEvidenceService do
       ]
     end
 
-    it 'initializes Aws Comprehend client with region and credentials' do
+    it 'initializes Aws Comprehend client with region' do
       expect(subject::REGION).not_to be_nil
-      expect(subject::CREDENTIALS).not_to be_nil
       expect(subject.aws_client).not_to be_nil
       expect(subject.aws_stub_client).not_to be_nil
     end
@@ -301,6 +299,7 @@ describe ExternalApi::ClaimEvidenceService do
 
     it 'retrieves key_phrases from CE API document' do
       subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
+      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
       output = subject.get_key_phrases_from_document(doc_uuid, stub_response: true)
       expect(output).to eq(['Department',"APPEAL\n1A"])
