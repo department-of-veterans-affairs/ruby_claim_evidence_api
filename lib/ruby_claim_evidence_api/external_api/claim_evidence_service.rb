@@ -131,7 +131,7 @@ module ExternalApi
 
       def filter_key_phrases_by_score(key_phrases)
         key_phrases.filter_map do |key_phrase|
-          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE
+          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE.to_f
         end
       end
 
