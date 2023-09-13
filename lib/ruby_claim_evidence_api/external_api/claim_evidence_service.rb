@@ -27,6 +27,15 @@ module ExternalApi
     REGION = ENV['AWS_REGION']
     AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
+    EXCEPTIONS = [
+      ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError,
+      ClaimEvidenceApi::Error::ClaimEvidenceApiError,
+      ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError,
+      ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError,
+      ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError,
+      ClaimEvidenceApi::Error::ClaimEvidenceRateLimitError
+    ].freeze
+
     class << self
       def document_types_request
         {
@@ -83,11 +92,11 @@ module ExternalApi
             when :get
               response = HTTPI.get(request)
               service_response = ExternalApi::Response.new(response)
-              fail service_response.error if service_response.error.present?
+              raise service_response.error if service_response.error.present?
 
               service_response
             else
-              fail NotImplementedError
+              raise NotImplementedError
             end
           end
         else
@@ -95,11 +104,11 @@ module ExternalApi
           when :get
             response = HTTPI.get(request)
             service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
+            raise service_response.error if service_response.error.present?
 
             service_response
           else
-            fail NotImplementedError
+            raise NotImplementedError
           end
         end
       end
@@ -136,7 +145,15 @@ module ExternalApi
       end
 
       def get_key_phrases_from_document(doc_uuid, stub_response: false)
-        ocr_data = get_ocr_document(doc_uuid)
+        begin
+          ocr_data = get_ocr_document(doc_uuid)
+        rescue *EXCEPTIONS => e
+          Rails.logger.error(e.message)
+          Raven.capture_exception(e.message)
+        end
+
+        return unless ocr_data.present?
+
         key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
         filter_key_phrases_by_score(key_phrases)
       end
