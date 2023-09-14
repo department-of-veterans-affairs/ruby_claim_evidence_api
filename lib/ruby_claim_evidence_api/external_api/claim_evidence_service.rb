@@ -99,7 +99,7 @@ module ExternalApi
             begin
               response = HTTPI.get(request)
               service_response = ExternalApi::Response.new(response)
-            rescue => error
+            rescue
               service_response = ExternalApi::Response.new(response)
               fail service_response.error if service_response.error.present?
             end
