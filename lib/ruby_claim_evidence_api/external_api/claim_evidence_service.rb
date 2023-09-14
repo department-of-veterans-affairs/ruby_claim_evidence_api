@@ -76,15 +76,18 @@ module ExternalApi
 
         # Check to see if MetricsService class exists. Required for Caseflow
         if Object.const_defined?('MetricsService')
-          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+          MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
                                 service: :claim_evidence,
                                 name: endpoint) do
             case method
             when :get
-              response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
-              fail service_response.error if service_response.error.present?
-
+              begin
+                response = HTTPI.get(request)
+                service_response = ExternalApi::Response.new(response)
+              rescue
+                service_response = ExternalApi::Response.new(response)
+                fail service_response.error if service_response.error.present?
+              end
               service_response
             else
               fail NotImplementedError
@@ -93,10 +96,13 @@ module ExternalApi
         else
           case method
           when :get
-            response = HTTPI.get(request)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
+            begin
+              response = HTTPI.get(request)
+              service_response = ExternalApi::Response.new(response)
+            rescue
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+            end
             service_response
           else
             fail NotImplementedError
@@ -137,6 +143,9 @@ module ExternalApi
 
       def get_key_phrases_from_document(doc_uuid, stub_response: false)
         ocr_data = get_ocr_document(doc_uuid)
+
+        return unless ocr_data.present?
+
         key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
         filter_key_phrases_by_score(key_phrases)
       end

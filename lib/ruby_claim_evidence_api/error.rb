@@ -2,11 +2,7 @@
 
 module ClaimEvidenceApi
   module Error
-    
-    # VANotify Errors
-    class VANotifyApiError < StandardError; end
-    class ClaimEvidenceNotFoundErrorVANotifyNotFoundError < VANotifyApiError; end
-    
+
     # ClaimEvidence Errors
     class ClaimEvidenceApiError < StandardError; end
     class ClaimEvidenceUnauthorizedError < ClaimEvidenceApiError; end
@@ -14,7 +10,6 @@ module ClaimEvidenceApi
     class ClaimEvidenceNotFoundError < ClaimEvidenceApiError; end
     class ClaimEvidenceInternalServerError < ClaimEvidenceApiError; end
     class ClaimEvidenceRateLimitError < ClaimEvidenceApiError; end
-  
+
   end
 end
-  
