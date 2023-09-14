@@ -27,15 +27,6 @@ module ExternalApi
     REGION = ENV['AWS_REGION']
     AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
-    EXCEPTIONS = [
-      ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError,
-      ClaimEvidenceApi::Error::ClaimEvidenceApiError,
-      ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError,
-      ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError,
-      ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError,
-      ClaimEvidenceApi::Error::ClaimEvidenceRateLimitError
-    ].freeze
-
     class << self
       def document_types_request
         {
@@ -85,30 +76,36 @@ module ExternalApi
 
         # Check to see if MetricsService class exists. Required for Caseflow
         if Object.const_defined?('MetricsService')
-          MetricsService.record("api.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+          MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
                                 service: :claim_evidence,
                                 name: endpoint) do
             case method
             when :get
-              response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
-              raise service_response.error if service_response.error.present?
-
+              begin
+                response = HTTPI.get(request)
+                service_response = ExternalApi::Response.new(response)
+              rescue
+                service_response = ExternalApi::Response.new(response)
+                fail service_response.error if service_response.error.present?
+              end
               service_response
             else
-              raise NotImplementedError
+              fail NotImplementedError
             end
           end
         else
           case method
           when :get
-            response = HTTPI.get(request)
-            service_response = ExternalApi::Response.new(response)
-            raise service_response.error if service_response.error.present?
-
+            begin
+              response = HTTPI.get(request)
+              service_response = ExternalApi::Response.new(response)
+            rescue => error
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+            end
             service_response
           else
-            raise NotImplementedError
+            fail NotImplementedError
           end
         end
       end
@@ -145,12 +142,7 @@ module ExternalApi
       end
 
       def get_key_phrases_from_document(doc_uuid, stub_response: false)
-        begin
-          ocr_data = get_ocr_document(doc_uuid)
-        rescue *EXCEPTIONS => e
-          Rails.logger.error(e.message)
-          Raven.capture_exception(e.message)
-        end
+        ocr_data = get_ocr_document(doc_uuid)
 
         return unless ocr_data.present?
 
