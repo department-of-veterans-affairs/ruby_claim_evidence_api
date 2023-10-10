@@ -27,7 +27,8 @@ ExternalApi::ClaimEvidenceService.get_ocr_document(doc.series_id)
 Internally, the app uses a `Fakes` module to mock API behavior. The required setup steps are as follows:
 
 1. Install and configure `devvpn`.
-    - _TODO_: Get more info re. this and link to docs.
+    - Information re. how to do this is located internally.
+    - Search "Steps to Set Up DevVPN" in the internal document repository or contact your team lead for assistance in locating these instructions.
 1. Add files needed by Faraday.
     1. Access the example certs [located here](https://github.com/department-of-veterans-affairs/bip-vefs-claimevidence/tree/development/Postman%20Suites/client%20certs).
     1. Copy the `.crt` file locally and note the path for later.
@@ -36,8 +37,7 @@ Internally, the app uses a `Fakes` module to mock API behavior. The required set
     - `JWT_TOKEN`:
         - **_NOTE_**: Some CE API endpoints need correct user roles in order to get a successful response.
             - For example, calling the OCR endpoint requires that the user attached to the request's JWT have a specific scanner role.
-            - More information on available roles can be found [here](http://example.com).
-                -  _TODO_: Get link to available roles documentation
+            - More information on available roles can be found by searching for "Policy Description Document" or "PDD" in the project management software.
         - For the `Fakes` module, JWT tokens do not auto-generate with each request, so you will need to either manually create one or use an existing token.
             - Using an existing token (recommended):
                 - Use one of the JWTs from the Postman environments listed [here](https://github.com/department-of-veterans-affairs/bip-vefs-claimevidence/tree/development/Postman%20Suites).
