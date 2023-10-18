@@ -44,6 +44,14 @@ module ExternalApi
         }
       end
 
+      def document_smart_search_request
+        {
+          headers: HEADERS,
+          endpoint: "/folders/files:search",
+          method: :post
+        }
+      end
+
       def document_types
         send_ce_api_request(document_types_request).body['documentTypes']
       end
@@ -54,6 +62,10 @@ module ExternalApi
 
       def get_ocr_document(doc_uuid)
         send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
+      end
+
+      def document_smart_search(vet_file_number, query)
+        send_ce_api_request(document_smart_search_request).body[vet_file_number][query]
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
