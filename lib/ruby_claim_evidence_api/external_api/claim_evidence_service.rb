@@ -28,6 +28,12 @@ module ExternalApi
     AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
+      def build_post_header(vet_file_number)
+        {
+          "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
+        }.merge(HEADERS)
+      end
+
       def document_types_request
         {
           headers: HEADERS,
@@ -44,11 +50,27 @@ module ExternalApi
         }
       end
 
-      def document_smart_search_request
+      def document_smart_search_request(file_number, query, page_number)
         {
-          headers: HEADERS,
-          endpoint: "/folders/files:search",
-          method: :post
+          headers: build_post_header(file_number),
+          endpoint: '/folders/files:search',
+          method: :post,
+          query: {
+            "filters": {
+              "textContent": {
+                "evaluationType": 'QUERY',
+                "query": {
+                  "includesAll": [
+                    query
+                  ]
+                }
+              }
+            },
+            "pageRequest": {
+              "resultsPerPage": 100,
+              "page": page_number
+            }
+          }
         }
       end
 
@@ -64,8 +86,8 @@ module ExternalApi
         send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
       end
 
-      def document_smart_search(vet_file_number, query)
-        send_ce_api_request(document_smart_search_request).body[vet_file_number][query]
+      def document_smart_search(file_number, query, page_number: 1)
+        send_ce_api_request(document_smart_search_request(file_number, query, page_number))
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
@@ -101,6 +123,15 @@ module ExternalApi
                 fail service_response.error if service_response.error.present?
               end
               service_response
+            when :post
+              begin
+                response = HTTPI.post(request)
+                service_response = ExternalApi::Response.new(response)
+              rescue
+                service_response = ExternalApi::Response.new(response)
+                fail service_response.error if service_response.error.present?
+              end
+              service_response
             else
               fail NotImplementedError
             end
@@ -110,6 +141,15 @@ module ExternalApi
           when :get
             begin
               response = HTTPI.get(request)
+              service_response = ExternalApi::Response.new(response)
+            rescue
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+            end
+            service_response
+          when :post
+            begin
+              response = HTTPI.post(request)
               service_response = ExternalApi::Response.new(response)
             rescue
               service_response = ExternalApi::Response.new(response)
