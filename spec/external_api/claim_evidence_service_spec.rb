@@ -142,6 +142,129 @@ describe ExternalApi::ClaimEvidenceService do
     }.to_json
   }
 
+  let(:document_smart_search_body) {
+    {
+      "files": [
+        {
+          "owner": {
+            "id": "id",
+            "type": "VETERAN"
+          },
+          "currentVersionUuid": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "uuid": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "currentVersion": {
+            "systemData": {
+              "uploadSource": "VBMS-UI",
+              "uploadedDateTime": "2022-03-22T15:24:24",
+              "mimeType": "application/pdf",
+              "contentName": "bf52e49f-5351-4211-b1db-734e3d3c5b64.pdf"
+            },
+            "providerData": {
+              "notes": "This is a note.",
+              "subject": "File contains evidence related to the claim.",
+              "benefitTypeId": 13,
+              "payeeCode": "00",
+              "documentTypeId": 137,
+              "claimantMiddleInitial": "claimantMiddleInitial",
+              "ocrStatus": "Searchable",
+              "endProductCode": "130DPNDCY",
+              "claimantParticipantId": "000000000",
+              "regionalProcessingOffice": "Buffalo",
+              "newMail": true,
+              "hasContentionAnnotation": true,
+              "systemSource": "VBMS-UI",
+              "claimantDateOfBirth": "2020-02-20",
+              "modifiedDateTime": "2022-03-22T15:24:49",
+              "certified": true,
+              "isAnnotated": true,
+              "duplicateInformation": {
+                "bestCopy": true,
+                "groupId": 5,
+                "establishesDate": true,
+                "certifiedCopy": true
+              },
+              "facilityCode": "Facility",
+              "veteranMiddleName": "veteranMiddleName",
+              "veteranSuffix": "veteranSuffix",
+              "readByCurrentUser": false,
+              "claimantSsn": "123-45-6789",
+              "veteranLastName": "veteranLastName",
+              "dateVaReceivedDocument": "2020-02-20",
+              "claimantFirstName": "claimantFirstName",
+              "veteranFirstName": "veteranFirstName",
+              "contentSource": "VISTA",
+              "actionable": true,
+              "documentCategoryId": 14,
+              "claimantLastName": "claimantLastName",
+              "lastOpenedDocument": false
+            }
+          }
+        },
+        {
+          "owner": {
+            "id": "id",
+            "type": "VETERAN"
+          },
+          "currentVersionUuid": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "uuid": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "currentVersion": {
+            "systemData": {
+              "uploadSource": "VBMS-UI",
+              "uploadedDateTime": "2022-03-22T15:24:24",
+              "mimeType": "application/pdf",
+              "contentName": "bf52e49f-5351-4211-b1db-734e3d3c5b64.pdf"
+            },
+            "providerData": {
+              "notes": "This is a note.",
+              "subject": "File contains evidence related to the claim.",
+              "benefitTypeId": 13,
+              "payeeCode": "00",
+              "documentTypeId": 137,
+              "claimantMiddleInitial": "claimantMiddleInitial",
+              "ocrStatus": "Searchable",
+              "endProductCode": "130DPNDCY",
+              "claimantParticipantId": "000000000",
+              "regionalProcessingOffice": "Buffalo",
+              "newMail": true,
+              "hasContentionAnnotation": true,
+              "systemSource": "VBMS-UI",
+              "claimantDateOfBirth": "2020-02-20",
+              "modifiedDateTime": "2022-03-22T15:24:49",
+              "certified": true,
+              "isAnnotated": true,
+              "duplicateInformation": {
+                "bestCopy": true,
+                "groupId": 5,
+                "establishesDate": true,
+                "certifiedCopy": true
+              },
+              "facilityCode": "Facility",
+              "veteranMiddleName": "veteranMiddleName",
+              "veteranSuffix": "veteranSuffix",
+              "readByCurrentUser": false,
+              "claimantSsn": "123-45-6789",
+              "veteranLastName": "veteranLastName",
+              "dateVaReceivedDocument": "2020-02-20",
+              "claimantFirstName": "claimantFirstName",
+              "veteranFirstName": "veteranFirstName",
+              "contentSource": "VISTA",
+              "actionable": true,
+              "documentCategoryId": 14,
+              "claimantLastName": "claimantLastName",
+              "lastOpenedDocument": false
+            }
+          }
+        }
+      ],
+      "page": {
+        "totalResults": 5,
+        "totalPages": 0,
+        "requestedResultsPerPage": 6,
+        "currentPage": 1
+      }
+    }.to_json
+  }
+
   let(:error_response_body) { { 'result': 'error', 'message': { 'token': ['error'] } }.to_json }
 
   let(:success_doc_types_response) do
@@ -154,6 +277,10 @@ describe ExternalApi::ClaimEvidenceService do
 
   let(:success_get_raw_ocr_document_response) do
     HTTPI::Response.new(200, {}, raw_ocr_from_doc_body)
+  end
+
+  let(:success_document_smart_search_response) do
+    HTTPI::Response.new(200, {}, document_smart_search_body)
   end
 
   let(:error_response) do
@@ -176,34 +303,45 @@ describe ExternalApi::ClaimEvidenceService do
   end
 
   context 'response success' do
-    it 'document types' do
+    before do
       allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
+    end
+
+    it 'document types' do
       allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
       document_types = ExternalApi::ClaimEvidenceService.document_types
       expect(document_types).to be_present
     end
 
     it 'alt_document_types' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_alt_doc_types_response)
       alt_document_types = ExternalApi::ClaimEvidenceService.alt_document_types
       expect(alt_document_types).to be_present
     end
 
     it 'get_ocr_document' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
       get_ocr_document = ExternalApi::ClaimEvidenceService.get_ocr_document(doc_uuid)
       expect(get_ocr_document).to be_present
       expect(get_ocr_document).to eq('Lorem ipsum')
     end
+
+    it 'document_smart_search' do
+      allow(HTTPI).to receive(:post).and_return(success_document_smart_search_response)
+      doc_smart_search = ExternalApi::ClaimEvidenceService.document_smart_search(doc_uuid, "test")
+      expect(doc_smart_search).to be_present
+    end
   end
 
   context 'response failure' do
     subject { ExternalApi::ClaimEvidenceService.document_types }
+
+    before do
+      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
+    end
+
     context 'throws fallback error' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceApiError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(error_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
       end
@@ -211,7 +349,6 @@ describe ExternalApi::ClaimEvidenceService do
 
     context '401' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(unauthorized_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
       end
@@ -219,7 +356,6 @@ describe ExternalApi::ClaimEvidenceService do
 
     context '403' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(forbidden_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
       end
@@ -227,7 +363,6 @@ describe ExternalApi::ClaimEvidenceService do
 
     context '404' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(not_found_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
       end
@@ -236,7 +371,6 @@ describe ExternalApi::ClaimEvidenceService do
     context '500' do
       let!(:error_code) { 500 }
       it 'throws ClaimEvidenceApi::Error:ClaimEvidenceInternalServerError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(internal_server_error_response)
         expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
       end
