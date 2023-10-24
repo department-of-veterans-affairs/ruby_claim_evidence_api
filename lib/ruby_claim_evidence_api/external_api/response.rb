@@ -67,7 +67,7 @@ module ExternalApi
     # Gets the error message from the response
     def error_message
       return 'No error message from ClaimEvidence' if body.empty?
-      
+
       body['message'] || body['errors'][0]['message']
     end
   end
