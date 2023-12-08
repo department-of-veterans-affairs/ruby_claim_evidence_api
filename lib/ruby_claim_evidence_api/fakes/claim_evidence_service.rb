@@ -76,6 +76,7 @@ module Fakes
       end
 
       def upload_document_types(file:)
+        Rails.logger.debug(upload_document_request(file_path:, content_name:))
         use_faraday(upload_document_request(file_path: file.path, content_name: file.original_filename)).body
       end
 
@@ -158,7 +159,9 @@ module Fakes
             service_response
           when :post
             response = conn.post(SERVER + endpoint, body)
+            Rails.logger.debug(response)
             service_response = ExternalApi::Response.new(response)
+            Rails.logger.debug(service_response)
             fail service_response.error if service_response.error.present?
 
             service_response
