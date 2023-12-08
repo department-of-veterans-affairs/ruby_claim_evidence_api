@@ -47,7 +47,7 @@ module Fakes
         }
       end
 
-      def upload_document_request(file_path:, content_name:)
+      def upload_document_request(file_path, content_name)
         {
           headers: HEADERS,
           endpoint: "/files",
@@ -76,7 +76,7 @@ module Fakes
       end
 
       def upload_document_types(file:)
-        Rails.logger.debug(upload_document_request(file_path:, content_name:))
+        Rails.logger.debug(upload_document_request(File_path: file.path, content_name: file.original_filename))
         use_faraday(upload_document_request(file_path: file.path, content_name: file.original_filename)).body
       end
 
