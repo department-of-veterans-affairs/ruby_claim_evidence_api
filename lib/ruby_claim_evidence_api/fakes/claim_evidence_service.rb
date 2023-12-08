@@ -71,7 +71,7 @@ module Fakes
                 veteranSuffix: "III"
               }
             }
-          }
+          }.to_json
         }
       end
 
