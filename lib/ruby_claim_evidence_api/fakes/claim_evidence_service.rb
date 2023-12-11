@@ -67,16 +67,16 @@ module Fakes
           }, "application/json"
         )
         {
-          headers: HEADERS,
+          headers: HEADERS.merge("Content-Type": "multipart/form-data", "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"),
           endpoint: "/files",
           method: :post,
           body: body
         }
       end
 
-      def upload_document_types(file:)
-        Rails.logger.debug(upload_document_request(File_path: file.path, content_name: file.original_filename))
-        use_faraday(upload_document_request(file_path: file.path, content_name: file.original_filename)).body
+      def upload_document_types(file, vet_file_number)
+        # Rails.logger.debug(upload_document_request(File_path: file.path, content_name: file.original_filename))
+        use_faraday(upload_document_request(file, vet_file_number)).body
       end
 
       def document_types

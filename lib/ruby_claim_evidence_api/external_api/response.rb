@@ -69,7 +69,7 @@ module ExternalApi
       Rails.logger.debug(body)
       return 'No error message from ClaimEvidence' if body.empty?
       
-      body['message'] || body['errors'][0]['message']
+      body['messages'] || body['errors'][0]['message']
     end
   end
 end
