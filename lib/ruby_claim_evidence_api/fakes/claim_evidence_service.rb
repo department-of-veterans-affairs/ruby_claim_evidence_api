@@ -64,10 +64,13 @@ module Fakes
               "claimantDateOfBirth": "2020-08-29",
               "newMail": true
             }
-          }, "application/json"
+          }.to_json, "application/json"
         )
         {
-          headers: HEADERS.merge("Content-Type": "multipart/form-data", "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"),
+          headers: HEADERS.merge(
+            "Content-Type": "multipart/form-data",
+            "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
+          ),
           endpoint: "/files",
           method: :post,
           body: body
