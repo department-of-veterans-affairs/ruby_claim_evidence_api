@@ -47,31 +47,30 @@ module Fakes
         }
       end
 
-      def upload_document_request(file_path, content_name)
+      def upload_document_request(file, vet_file_number)
+        payload = {}
+        payload[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
+        payload[:raw_data] = Faraday::Multipart::ParamPart.new(
+          {
+            'contentName': File.basename(file),
+            'providerData': {
+              "contentSource": "VISTA",
+              "documentTypeId": 131,
+              "dateVaReceivedDocument": "2020-02-20",
+              "subject": "TestSubject",
+              "contentions": ["brokenLeg", "brokenArm"],
+              "alternativeDocumentTypeIds": [1, 2, 3],
+              "actionable": false,
+              "claimantDateOfBirth": "2020-08-29",
+              "newMail": true
+            }
+          }, "application/json"
+        )
         {
           headers: HEADERS,
           endpoint: "/files",
           method: :post,
-          body: {
-            file: file_path,
-            payload: {
-              contentName: content_name,
-              providerData: {
-                contentSource: "VISTA",
-                documentTypeId: 131,
-                dateVaReceivedDocument: "2020-02-20",
-                subject: "TestSubject",
-                contentions: %w[brokenLeg brokenArm],
-                alternativeDocumentTypeIds: [1, 2, 3],
-                veteranFirstName: "john",
-                actionable: false,
-                isInitialNewMail: false,
-                veteranMiddleName: "middleName",
-                veteranLastName: "lastName",
-                veteranSuffix: "III"
-              }
-            }
-          }.to_json
+          body: payload
         }
       end
 
