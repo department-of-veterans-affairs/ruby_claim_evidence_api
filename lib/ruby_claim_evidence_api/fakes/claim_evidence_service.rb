@@ -70,7 +70,7 @@ module Fakes
           headers: HEADERS,
           endpoint: "/files",
           method: :post,
-          body: payload
+          body: body
         }
       end
 
