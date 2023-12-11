@@ -50,9 +50,8 @@ module Fakes
 
       def upload_document_request(file, vet_file_number)
         body = {}
-        body[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
-        body[:payload] = Faraday::Multipart::ParamPart.new(
-          {
+        body[:file] = file.path
+        body[:payload] = {
             'contentName': File.basename(file),
             'providerData': {
               "contentSource": "VISTA",
@@ -66,7 +65,6 @@ module Fakes
               "newMail": true
             }
           }.to_json, "application/json"
-        )
         {
           headers: HEADERS.merge(
             "Content-Type": "multipart/form-data",
@@ -165,7 +163,7 @@ module Fakes
             response = conn.post(SERVER + endpoint, body)
             Rails.logger.debug(response)
             service_response = ExternalApi::Response.new(response)
-            Rails.logger.debug(service_response)
+            # Rails.logger.debug(service_response)
             fail service_response.error if service_response.error.present?
 
             service_response
