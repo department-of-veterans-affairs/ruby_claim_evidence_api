@@ -1,4 +1,5 @@
 require "ruby_claim_evidence_api/external_api/response"
+require "faraday"
 module Fakes
   class ClaimEvidenceService
     ENV = {
@@ -144,6 +145,7 @@ module Fakes
             verify: !ApplicationController.dependencies_faked?
           }
         ) do |c|
+          c.request :multipart
           c.response :json
           c.adapter Faraday.default_adapter
         end
