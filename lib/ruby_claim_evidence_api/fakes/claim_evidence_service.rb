@@ -48,9 +48,9 @@ module Fakes
       end
 
       def upload_document_request(file, vet_file_number)
-        payload = {}
-        payload[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
-        payload[:raw_data] = Faraday::Multipart::ParamPart.new(
+        body = {}
+        body[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
+        body[:payload] = Faraday::Multipart::ParamPart.new(
           {
             'contentName': File.basename(file),
             'providerData': {
