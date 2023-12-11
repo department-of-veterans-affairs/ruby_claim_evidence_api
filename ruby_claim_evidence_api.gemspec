@@ -15,6 +15,7 @@
     s.add_dependency "base64"
     s.add_runtime_dependency "activesupport"
     s.add_runtime_dependency "faraday" 
+    s.add_runtime_dependency "faraday-multipart"
     s.add_runtime_dependency "railties"
     
     s.files = Dir['lib/**/*.rb']
