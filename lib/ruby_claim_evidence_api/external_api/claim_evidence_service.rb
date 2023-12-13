@@ -44,6 +44,23 @@ module ExternalApi
         }
       end
 
+      def upload_document_request(file, vet_file_number, doc_info)
+        file_data = File.read(file)
+        request_payload = {
+          file: file_data,
+          payload: doc_info
+        }
+        {
+          headers: HEADERS.merge(
+            "Content-Type": "multipart/form-data",
+            "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
+          ),
+          endpoint: "/files",
+          method: :post,
+          body: request_payload
+        }
+      end
+
       def document_types
         send_ce_api_request(document_types_request).body['documentTypes']
       end
@@ -56,7 +73,11 @@ module ExternalApi
         send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      def upload_document(file, vet_file_number, doc_info)
+        send_ce_api_request(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         jwt_token = generate_jwt_token
 
@@ -74,34 +95,26 @@ module ExternalApi
 
         sleep 1
 
-        # Check to see if MetricsService class exists. Required for Caseflow
-        if Object.const_defined?('MetricsService')
-          MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
-                                service: :claim_evidence,
-                                name: endpoint) do
-            case method
-            when :get
-              begin
-                response = HTTPI.get(request)
-                service_response = ExternalApi::Response.new(response)
-              rescue
-                service_response = ExternalApi::Response.new(response)
-                fail service_response.error if service_response.error.present?
-              end
-              service_response
-            else
-              fail NotImplementedError
-            end
-          end
-        else
+        MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
+                              service: :claim_evidence,
+                              name: endpoint) do
           case method
           when :get
             begin
               response = HTTPI.get(request)
               service_response = ExternalApi::Response.new(response)
-            rescue
+            rescue StandardError
               service_response = ExternalApi::Response.new(response)
-              fail service_response.error if service_response.error.present?
+              raise service_response.error if service_response.error.present?
+            end
+            service_response
+          when :post
+            begin
+              response = HTTPI.post(request)
+              service_response = ExternalApi::Response.new(response)
+            rescue StandardError
+              service_response = ExternalApi::Response.new(response)
+              raise service_response.error if service_response.error.present?
             end
             service_response
           else
@@ -183,6 +196,6 @@ module ExternalApi
         encoded_source.tr('/', '_')
       end
     end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
   end
 end

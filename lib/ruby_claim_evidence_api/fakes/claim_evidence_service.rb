@@ -42,22 +42,10 @@ module Fakes
         }
       end
 
-      # rubocop:disable Metrics/MethodLength
       def upload_document_request(file, vet_file_number, doc_info)
         body = {}
         body[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
-        body[:payload] = Faraday::Multipart::ParamPart.new(
-          {
-            'contentName': File.basename(file),
-            'providerData': {
-              "contentSource": "VISTA", # need to figure out this value
-              "documentTypeId": doc_info[:document].vbms_document_type_id,
-              "dateVaReceivedDocument": doc_info[:correspondence].va_date_of_receipt.strftime("%Y-%m-%d"),
-              "actionable": false,
-              "newMail": true
-            }
-          }.to_json, "application/json"
-        )
+        body[:payload] = Faraday::Multipart::ParamPart.new(doc_info, "application/json")
         {
           headers: HEADERS.merge(
             "Content-Type": "multipart/form-data",
@@ -67,11 +55,6 @@ module Fakes
           method: :post,
           body: body
         }
-      end
-      # rubocop:enable Metrics/MethodLength
-
-      def upload_document(file, vet_file_number, doc_info)
-        use_faraday(upload_document_request(file, vet_file_number, doc_info)).body
       end
 
       def document_types
@@ -116,6 +99,10 @@ module Fakes
         end
       end
 
+      def upload_document(file, vet_file_number, doc_info)
+        use_faraday(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def use_faraday(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         url = URI::DEFAULT_PARSER.escape(BASE_URL)
@@ -145,7 +132,7 @@ module Fakes
         end
 
         sleep 1
-        MetricsService.record("api.fakes.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+        MetricsService.record("api.fakes.claim.evidence #{method.to_s.upcase} request to #{url}",
                               service: :claim_evidence,
                               name: endpoint) do
           case method
@@ -157,9 +144,7 @@ module Fakes
             service_response
           when :post
             response = conn.post(SERVER + endpoint, body)
-            Rails.logger.debug(response)
             service_response = ExternalApi::Response.new(response)
-            # Rails.logger.debug(service_response)
             fail service_response.error if service_response.error.present?
 
             service_response
