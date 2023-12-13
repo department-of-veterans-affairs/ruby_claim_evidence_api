@@ -1,16 +1,10 @@
+# frozen_string_literal: true
+
 require "ruby_claim_evidence_api/external_api/response"
 require "faraday"
+require "faraday/multipart"
 module Fakes
   class ClaimEvidenceService
-    ENV = {
-      "CLAIM_EVIDENCE_JWT_TOKEN" =>
-   "yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3NmQxOWE2OC03MDA1LTRhNjgtOWEzNC03MzEzZmI0MjMzNzMiLCJpYXQiOjE1MTYyMzkwMjIsImlzcyI6ImRldmVsb3BlclRlc3RpbmciLCJhcHBsaWNhdGlvbklEIjoiVkJNUy1VSSIsInVzZXJJRCI6ImNob3dhcl9zc3VwZXIiLCJzdGF0aW9uSUQiOiIzMTcifQ.PoKDvoVdAh9oNsRmn5SD-MYfEghNiyAQjNNrbRCnqbw",
-      "CLAIM_EVIDENCE_API_URL" => "https://vefs-claimevidence-uat.stage.bip.va.gov",
-      "DEVVPN_PROXY" => "http://aideusername:aidepassword@127.0.0.1:9443",
-      "SSL_CERT_FILE" => "/Users/razortalent/Projects/caseflow-setup/caseflow/lib/data/vbms-internal.client.vbms.aide.oit.va.gov.crt",
-      "CLAIM_EVIDENCE_KEY_FILE" => "/Users/razortalent/Projects/caseflow-setup/caseflow/lib/data/vbms-internal.client.vbms.aide.oit.va.gov.key",
-      "CLAIM_EVIDENCE_CERT_PASSPHRASE" => "vbmsclient"
-    }.freeze
     JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
     BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
     SERVER = "/api/v1/rest"
@@ -48,23 +42,22 @@ module Fakes
         }
       end
 
-      def upload_document_request(file, vet_file_number)
+      # rubocop:disable Metrics/MethodLength
+      def upload_document_request(file, vet_file_number, doc_info)
         body = {}
-        body[:file] = file.path
-        body[:payload] = {
+        body[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
+        body[:payload] = Faraday::Multipart::ParamPart.new(
+          {
             'contentName': File.basename(file),
             'providerData': {
-              "contentSource": "VISTA",
-              "documentTypeId": 131,
-              "dateVaReceivedDocument": "2020-02-20",
-              "subject": "TestSubject",
-              "contentions": ["brokenLeg", "brokenArm"],
-              "alternativeDocumentTypeIds": [1, 2, 3],
+              "contentSource": "VISTA", # need to figure out this value
+              "documentTypeId": doc_info[:document].vbms_document_type_id,
+              "dateVaReceivedDocument": doc_info[:correspondence].va_date_of_receipt.strftime("%Y-%m-%d"),
               "actionable": false,
-              "claimantDateOfBirth": "2020-08-29",
               "newMail": true
             }
           }.to_json, "application/json"
+        )
         {
           headers: HEADERS.merge(
             "Content-Type": "multipart/form-data",
@@ -75,10 +68,10 @@ module Fakes
           body: body
         }
       end
+      # rubocop:enable Metrics/MethodLength
 
-      def upload_document_types(file, vet_file_number)
-        # Rails.logger.debug(upload_document_request(File_path: file.path, content_name: file.original_filename))
-        use_faraday(upload_document_request(file, vet_file_number)).body
+      def upload_document(file, vet_file_number, doc_info)
+        use_faraday(upload_document_request(file, vet_file_number, doc_info)).body
       end
 
       def document_types
@@ -123,6 +116,7 @@ module Fakes
         end
       end
 
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def use_faraday(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         url = URI::DEFAULT_PARSER.escape(BASE_URL)
         # The certs fail to successfully connect so SSL verification is disabled, but they still need to be present
@@ -146,6 +140,8 @@ module Fakes
           c.request :multipart
           c.response :json
           c.adapter Faraday.default_adapter
+          c.options.timeout = 120
+          c.options.open_timeout = 120
         end
 
         sleep 1
@@ -172,6 +168,7 @@ module Fakes
           end
         end
       end
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
