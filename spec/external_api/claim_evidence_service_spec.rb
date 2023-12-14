@@ -15,7 +15,18 @@ describe ExternalApi::ClaimEvidenceService do
   let(:aws_secret_access_key) { 'dummysecretkey' }
   let(:aws_region) { 'us-gov-west-1' }
   let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
-
+  let(:file) { "/fake/file" }
+  let(:file_number) { "500000000" }
+  let(:doc_info) { {
+    file: file,
+    payload: {
+      contentName: "blah",
+      providerData: {
+        actionable: true,
+        documentTypeId: 1,
+        contentSource: "VISTA",
+        dateVaReceivedDocument: "2020-05-01"
+      } } } }
   before do
     ExternalApi::ClaimEvidenceService::BASE_URL = base_url
   end
@@ -142,6 +153,13 @@ describe ExternalApi::ClaimEvidenceService do
     }.to_json
   }
 
+  upload_document_body = {
+    body: {
+      "uuid": "a89ca2f5-76e8-4d10-826c-34d34b3e386e",
+      "currentVersionUuid": "bdbe50a5-62a8-4724-abe4-7048a61b3dee"
+    }
+  }.to_json
+
   let(:error_response_body) { { 'result': 'error', 'message': { 'token': ['error'] } }.to_json }
 
   let(:success_doc_types_response) do
@@ -154,6 +172,10 @@ describe ExternalApi::ClaimEvidenceService do
 
   let(:success_get_raw_ocr_document_response) do
     HTTPI::Response.new(200, {}, raw_ocr_from_doc_body)
+  end
+
+  let(:success_post_upload_document_response) do
+    HTTPI::Response.new(200, {}, upload_document_body)
   end
 
   let(:error_response) do
@@ -196,6 +218,14 @@ describe ExternalApi::ClaimEvidenceService do
       get_ocr_document = ExternalApi::ClaimEvidenceService.get_ocr_document(doc_uuid)
       expect(get_ocr_document).to be_present
       expect(get_ocr_document).to eq('Lorem ipsum')
+    end
+
+    it 'upload_document' do
+      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
+      allow(File).to receive(:read).and_return("\x05\x00\x68\x65\x6c\x6c\x6f")
+      allow(HTTPI).to receive(:post).and_return(success_post_upload_document_response)
+      upload_document = ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
+      expect(upload_document).to be_present
     end
   end
 

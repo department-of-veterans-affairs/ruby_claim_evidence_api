@@ -94,32 +94,27 @@ module ExternalApi
         request.headers = headers.merge(Authorization: "Bearer #{jwt_token}")
 
         sleep 1
-
-        MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
-          case method
-          when :get
-            begin
-              response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
-            rescue StandardError
-              service_response = ExternalApi::Response.new(response)
-              raise service_response.error if service_response.error.present?
-            end
-            service_response
-          when :post
-            begin
-              response = HTTPI.post(request)
-              service_response = ExternalApi::Response.new(response)
-            rescue StandardError
-              service_response = ExternalApi::Response.new(response)
-              raise service_response.error if service_response.error.present?
-            end
-            service_response
-          else
-            fail NotImplementedError
+        case method
+        when :get
+          begin
+            response = HTTPI.get(request)
+            service_response = ExternalApi::Response.new(response)
+          rescue
+            service_response = ExternalApi::Response.new(response)
+            fail service_response.error if service_response.error.present?
           end
+          service_response
+        when :post
+          begin
+            response = HTTPI.post(request)
+            service_response = ExternalApi::Response.new(response)
+          rescue
+            service_response = ExternalApi::Response.new(response)
+            fail service_response.error if service_response.error.present?
+          end
+          service_response
+        else
+          fail NotImplementedError
         end
       end
 
