@@ -160,7 +160,7 @@ describe ExternalApi::ClaimEvidenceService do
     }
   }.to_json
 
-  let(:error_response_body) { { 'result': 'error', 'message': { 'token': ['error'] } }.to_json }
+  let(:error_response_body) { { 'messages': { 'token': ["error"] } }.to_json }
 
   let(:success_doc_types_response) do
     HTTPI::Response.new(200, {}, doc_types_body)
