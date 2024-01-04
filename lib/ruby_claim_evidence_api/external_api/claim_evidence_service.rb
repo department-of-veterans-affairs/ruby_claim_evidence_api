@@ -45,7 +45,7 @@ module ExternalApi
       end
 
       def upload_document_request(file, vet_file_number, doc_info)
-        file_data = File.read(file)
+        file_data = File.binread(file)
         request_payload = {
           file: file_data,
           payload: doc_info
