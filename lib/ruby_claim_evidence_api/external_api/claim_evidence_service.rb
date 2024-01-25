@@ -189,7 +189,7 @@ module ExternalApi
           jti: SecureRandom.uuid,
           iat: current_timestamp,
           iss: TOKEN_ISSUER,
-          applicationId: TOKEN_ISSUER,
+          applicationID: TOKEN_ISSUER,
           userID: TOKEN_USER,
           stationID: TOKEN_STATION_ID
         }
