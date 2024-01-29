@@ -3,9 +3,11 @@
 require 'pry'
 require 'httpi'
 require 'active_support/all'
-require 'ruby_claim_evidence_api/external_api/response.rb'
+require 'ruby_claim_evidence_api/external_api/response'
 require 'aws-sdk'
 require 'base64'
+require 'faraday'
+require 'faraday/multipart'
 
 module ExternalApi
   # Establishes connection between Claims Evidence API, AWS, and Caseflow
@@ -45,10 +47,9 @@ module ExternalApi
       end
 
       def upload_document_request(file, vet_file_number, doc_info)
-        file_data = File.binread(file)
-        request_payload = {
-          file: file_data,
-          payload: doc_info
+        request_body = {
+          file: Faraday::Multipart::FilePart.new(file, "application/pdf"),
+          payload: Faraday::Multipart::ParamPart.new(doc_info, "application/json")
         }
         {
           headers: HEADERS.merge(
@@ -57,7 +58,7 @@ module ExternalApi
           ),
           endpoint: "/files",
           method: :post,
-          body: request_payload
+          body: request_body
         }
       end
 
@@ -73,8 +74,24 @@ module ExternalApi
         send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
       end
 
+      # Doc_info for upload should conform to the following minimum requirements
+      # doc_info = {
+      #   "contentName": "insert_name.pdf",
+      #   "providerData": {
+      #     "contentSource": "insert_source",
+      #     "documentTypeId": 1,
+      #     "dateVaReceivedDocument": "YYYY-MM-DD"
+      #   }
+      # }
       def upload_document(file, vet_file_number, doc_info)
         send_ce_api_request(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      def send_faraday_multipart_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
+        faraday_connection do |conn|
+          conn.request :multipart
+          conn.response :json
+        end
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
@@ -100,46 +117,16 @@ module ExternalApi
           MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
                                 service: :claim_evidence,
                                 name: endpoint) do
-            case method
-            when :get
-              response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
-              fail service_response.error if service_response.error.present?
-
-              service_response
-            when :post
-              response = HTTPI.post(request)
-              service_response = ExternalApi::Response.new(response)
-              fail service_response.error if service_response.error.present?
-
-              service_response
-            else
-              fail NotImplementedError
-            end
+            handle_httpi_responses(method, request)
           end
         else
-          case method
-          when :get
-            response = HTTPI.get(request)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
-            service_response
-          when :post
-            response = HTTPI.post(request)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
-            service_response
-          else
-            fail NotImplementedError
-          end
+          handle_httpi_responses(method, request)
         end
       end
 
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
-          region: REGION,
+          region: REGION
         )
       end
 
@@ -179,6 +166,25 @@ module ExternalApi
 
       private
 
+      def handle_httpi_responses(method, request)
+        case method
+        when :get
+          response = HTTPI.get(request)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        when :post
+          response = HTTPI.post(request)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        else
+          fail NotImplementedError
+        end
+      end
+
       def generate_jwt_token
         header = {
           typ: 'JWT',
@@ -208,6 +214,20 @@ module ExternalApi
         encoded_source = encoded_source.sub(/=+$/, '')
         encoded_source = encoded_source.tr('+', '-')
         encoded_source.tr('/', '_')
+      end
+
+      def faraday_connection
+        @faraday_connection = Faraday.new(URI::DEFAULT_PARSER.escape(BASE_URL + SERVER)) do |conn|
+          conn.adapter = Faraday.default_adapter
+
+          conn.ssl[:client_cert] = OpenSSL::X509::Certificate.new(File.read(ENV['BGS_CERT_LOCATION']))
+          conn.ssl[:client_key] = OpenSSL::PKey::RSA.new(File.read(ENV['BGS_KEY_LOCATION']))
+          conn.ssl[:ca_file] = CERT_FILE_LOCATION
+          conn.ssl[:version] = :TLSv1_2
+
+          conn.options.timeout = 120
+          conn.options.open_timeout = 120
+        end
       end
     end
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
