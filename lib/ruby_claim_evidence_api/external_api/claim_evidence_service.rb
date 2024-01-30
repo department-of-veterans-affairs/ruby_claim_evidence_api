@@ -84,33 +84,43 @@ module ExternalApi
       #   }
       # }
       def upload_document(file, vet_file_number, doc_info)
-        send_ce_api_request(upload_document_request(file, vet_file_number, doc_info)).body
+        send_faraday_multipart_request(upload_document_request(file, vet_file_number, doc_info)).body
       end
 
       def send_faraday_multipart_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
-        faraday_connection do |conn|
-          conn.request :multipart
-          conn.response :json
-          conn.headers = headers.merge(Authorization: "Bearer #{generate_jwt_token}")
+        jwt_token = generate_jwt_token
+        faraday_connection = Faraday.new(URI::DEFAULT_PARSER.escape(BASE_URL + SERVER)) do |conn|
+          conn.adapter = Faraday.default_adapter
+
+          conn.ssl[:client_cert] = OpenSSL::X509::Certificate.new(File.read(ENV['BGS_CERT_LOCATION']))
+          conn.ssl[:client_key] = OpenSSL::PKey::RSA.new(File.read(ENV['BGS_KEY_LOCATION']))
+          conn.ssl[:ca_file] = CERT_FILE_LOCATION
+          conn.ssl[:version] = :TLSv1_2
+
+          conn.options.timeout = 120
+          conn.options.open_timeout = 120
+
+          conn.headers['Authorization'] = "Bearer #{jwt_token}"
+          conn.headers.merge!(headers)
         end
         sleep 1
         MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
                               service: :claim_evidence,
                               name: endpoint) do
-          handle_faraday_response(endpoint, query, body)
+          handle_faraday_response(endpoint, query, body, faraday_connection)
         end
       end
 
-      def handle_faraday_response(endpoint, query, body)
+      def handle_faraday_response(endpoint, query, body, faraday_connection)
         case method
         when :get
-          response = conn.get(endpoint, query)
+          response = faraday_connection.get(endpoint, query)
           service_response = ExternalApi::Response.new(response)
           fail service_response.error if service_response.error.present?
 
           service_response
         when :post
-          response = conn.post(endpoint, body)
+          response = faraday_connection.post(endpoint, body)
           service_response = ExternalApi::Response.new(response)
           fail service_response.error if service_response.error.present?
 
@@ -240,20 +250,6 @@ module ExternalApi
         encoded_source = encoded_source.sub(/=+$/, '')
         encoded_source = encoded_source.tr('+', '-')
         encoded_source.tr('/', '_')
-      end
-
-      def faraday_connection
-        @faraday_connection = Faraday.new(URI::DEFAULT_PARSER.escape(BASE_URL + SERVER)) do |conn|
-          conn.adapter = Faraday.default_adapter
-
-          conn.ssl[:client_cert] = OpenSSL::X509::Certificate.new(File.read(ENV['BGS_CERT_LOCATION']))
-          conn.ssl[:client_key] = OpenSSL::PKey::RSA.new(File.read(ENV['BGS_KEY_LOCATION']))
-          conn.ssl[:ca_file] = CERT_FILE_LOCATION
-          conn.ssl[:version] = :TLSv1_2
-
-          conn.request[:timeout] = 120
-          conn.request[:open_timeout] = 120
-        end
       end
     end
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
