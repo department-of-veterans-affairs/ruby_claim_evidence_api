@@ -89,7 +89,8 @@ module ExternalApi
 
       def send_faraday_multipart_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         jwt_token = generate_jwt_token
-        faraday_connection = Faraday.new(URI::DEFAULT_PARSER.escape(BASE_URL + SERVER)) do |conn|
+        url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER)
+        faraday_connection = Faraday.new(url) do |conn|
           conn.adapter = Faraday.default_adapter
           conn.request :multipart
           conn.request :url_encoded
