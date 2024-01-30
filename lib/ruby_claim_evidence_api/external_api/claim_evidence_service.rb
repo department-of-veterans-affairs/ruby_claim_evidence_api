@@ -48,15 +48,15 @@ module ExternalApi
 
       def upload_document_request(file, vet_file_number, doc_info)
         request_body = {
-          file: Faraday::Multipart::FilePart.new(file, "application/pdf"),
-          payload: Faraday::Multipart::ParamPart.new(doc_info, "application/json")
+          file: Faraday::Multipart::FilePart.new(file, 'application/pdf'),
+          payload: Faraday::Multipart::ParamPart.new(doc_info, 'application/json')
         }
         {
           headers: HEADERS.merge(
-            "Content-Type": "multipart/form-data",
+            "Content-Type": 'multipart/form-data',
             "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
           ),
-          endpoint: "/files",
+          endpoint: '/files',
           method: :post,
           body: request_body
         }
@@ -91,6 +91,32 @@ module ExternalApi
         faraday_connection do |conn|
           conn.request :multipart
           conn.response :json
+          conn.headers = headers.merge(Authorization: "Bearer #{generate_jwt_token}")
+        end
+        sleep 1
+        MetricsService.record("api.claim.evidence #{method.to_s.upcase} request to #{url}",
+                              service: :claim_evidence,
+                              name: endpoint) do
+          handle_faraday_response(endpoint, query, body)
+        end
+      end
+
+      def handle_faraday_response(endpoint, query, body)
+        case method
+        when :get
+          response = conn.get(endpoint, query)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        when :post
+          response = conn.post(endpoint, body)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        else
+          fail NotImplementedError
         end
       end
 
@@ -225,8 +251,8 @@ module ExternalApi
           conn.ssl[:ca_file] = CERT_FILE_LOCATION
           conn.ssl[:version] = :TLSv1_2
 
-          conn.options.timeout = 120
-          conn.options.open_timeout = 120
+          conn.request[:timeout] = 120
+          conn.request[:open_timeout] = 120
         end
       end
     end
