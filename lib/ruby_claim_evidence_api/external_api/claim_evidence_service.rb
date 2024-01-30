@@ -49,7 +49,7 @@ module ExternalApi
       def upload_document_request(file, vet_file_number, doc_info)
         request_body = {
           file: Faraday::Multipart::FilePart.new(file, 'application/pdf'),
-          payload: Faraday::Multipart::ParamPart.new(doc_info, 'application/json')
+          payload: doc_info
         }
         {
           headers: HEADERS.merge(
@@ -91,6 +91,8 @@ module ExternalApi
         jwt_token = generate_jwt_token
         faraday_connection = Faraday.new(URI::DEFAULT_PARSER.escape(BASE_URL + SERVER)) do |conn|
           conn.adapter = Faraday.default_adapter
+          conn.request :multipart
+          conn.request :url_encoded
 
           conn.ssl[:client_cert] = OpenSSL::X509::Certificate.new(File.read(ENV['BGS_CERT_LOCATION']))
           conn.ssl[:client_key] = OpenSSL::PKey::RSA.new(File.read(ENV['BGS_KEY_LOCATION']))
