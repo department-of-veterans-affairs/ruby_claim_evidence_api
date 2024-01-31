@@ -9,9 +9,10 @@ module ExternalApi
   class Response
     attr_reader :resp, :code
 
-    def initialize(resp)
+    def initialize(resp, uses_net_http = false)
       @resp = resp
-      @code = @resp.try(:code) || @resp.try(:status)
+      @uses_net_http = uses_net_http
+      @code = @resp.try(:code).to_i || @resp.try(:status)
     end
 
     def data; end
@@ -28,7 +29,9 @@ module ExternalApi
 
     # Parses response body to an object
     def body
-      if resp.is_a?(Faraday::Response)
+      if @uses_net_http == true
+        resp
+      elsif resp.is_a?(Faraday::Response)
         resp.body
       else
         @body ||=
@@ -68,7 +71,12 @@ module ExternalApi
     def error_message
       return "No error message from ClaimEvidence" if body.empty?
 
-      body["messages"] || body["errors"][0]["message"]
+      if @uses_net_http == true 
+        body['message']
+      else
+        body["messages"] || body["errors"][0]["message"]
+      end
+      
     end
   end
 end
