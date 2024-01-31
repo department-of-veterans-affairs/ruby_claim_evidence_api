@@ -44,21 +44,18 @@ module ExternalApi
         }
       end
 
-      def upload_document_request(file, vet_file_number, doc_info)
-        file_data = File.binread(file)
-        request_payload = {
-          file: file_data,
-          payload: doc_info
-        }
-        {
-          headers: HEADERS.merge(
-            "Content-Type": "multipart/form-data",
-            "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
-          ),
-          endpoint: "/files",
-          method: :post,
-          body: request_payload
-        }
+      def upload_document_request(file_path, vet_file_number, doc_info)
+        request = set_upload_document_form_data_for_request(
+          request: Net::HTTP::Post.new(file_upload_uri),
+          payload: doc_info,
+          file_path: file_path
+        )
+
+        jwt_token = generate_jwt_token
+        request['Authorization'] = jwt_token
+        request['X-Folder-URI'] = "VETERAN:FILENUMBER:#{vet_file_number}"
+
+        request
       end
 
       def document_types
@@ -74,7 +71,23 @@ module ExternalApi
       end
 
       def upload_document(file, vet_file_number, doc_info)
-        send_ce_api_request(upload_document_request(file, vet_file_number, doc_info)).body
+        send_multipart_post_request(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      def send_mulitpart_post_request(request)
+        # Create Net::HTTP and configure
+        http = Net::HTTP.new(file_upload_uri.host, file_upload_uri.port)
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+        http.ca_file = ''
+        http.cert = ''
+        http.key = ''
+        http.ssl_version = :TLSv1_2
+
+        # Send Request
+        http.start do |https|
+          https.request(request)
+        end
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
@@ -178,6 +191,19 @@ module ExternalApi
       end
 
       private
+
+      def set_upload_document_form_data_for_request(request:, payload:, file_path:)
+        file_content = File.binread(file_path)
+        form_data = []
+        form_data << ['file', file_content, { filename: File.basename(file_path), content_type: 'application/pdf' }]
+        form_data << ['payload', payload.to_json]
+        request.set_form form_data, 'multipart/form-data'
+        request
+      end
+
+      def file_upload_uri
+        @file_upload_uri = URI("#{BASE_URL}#{SERVER}/files")
+      end
 
       def generate_jwt_token
         header = {
