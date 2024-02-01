@@ -4,6 +4,7 @@ require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
 require 'aws-sdk'
 require './spec/external_api/spec_helper'
+require 'webmock/rspec'
 
 describe ExternalApi::ClaimEvidenceService do
   # Fake/Testing ENV variables
@@ -15,7 +16,18 @@ describe ExternalApi::ClaimEvidenceService do
   let(:aws_secret_access_key) { 'dummysecretkey' }
   let(:aws_region) { 'us-gov-west-1' }
   let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
-
+  let(:file) { "/fake/file" }
+  let(:file_number) { "500000000" }
+  let(:doc_info) { {
+    file: file,
+    payload: {
+      contentName: "blah",
+      providerData: {
+        actionable: true,
+        documentTypeId: 1,
+        contentSource: "VISTA",
+        dateVaReceivedDocument: "2020-05-01"
+      } } } }
   before do
     ExternalApi::ClaimEvidenceService::BASE_URL = base_url
   end
@@ -142,7 +154,14 @@ describe ExternalApi::ClaimEvidenceService do
     }.to_json
   }
 
-  let(:error_response_body) { { 'result': 'error', 'message': { 'token': ['error'] } }.to_json }
+  upload_document_body = {
+    body: {
+      "uuid": "a89ca2f5-76e8-4d10-826c-34d34b3e386e",
+      "currentVersionUuid": "bdbe50a5-62a8-4724-abe4-7048a61b3dee"
+    }
+  }.to_json
+
+  let(:error_response_body) { { 'messages': { 'token': ["error"] } }.to_json }
 
   let(:success_doc_types_response) do
     HTTPI::Response.new(200, {}, doc_types_body)
@@ -154,6 +173,10 @@ describe ExternalApi::ClaimEvidenceService do
 
   let(:success_get_raw_ocr_document_response) do
     HTTPI::Response.new(200, {}, raw_ocr_from_doc_body)
+  end
+
+  let(:success_post_upload_document_response) do
+    HTTPI::Response.new(200, {}, upload_document_body)
   end
 
   let(:error_response) do
@@ -196,6 +219,44 @@ describe ExternalApi::ClaimEvidenceService do
       get_ocr_document = ExternalApi::ClaimEvidenceService.get_ocr_document(doc_uuid)
       expect(get_ocr_document).to be_present
       expect(get_ocr_document).to eq('Lorem ipsum')
+    end
+
+    describe 'with multipart Net HTTP request' do
+      let(:url) { 'https://fake.api.claimevidence.comapi/v1/rest/files' }
+      let(:ssl_key_path) { 'path/to/key' }
+      let(:ssl_cert_path) { 'path/to/cert' }
+
+      before do
+        allow(ENV).to receive(:[]).with('BGS_CERT_LOCATION').and_return(ssl_cert_path)
+        allow(ENV).to receive(:[]).with('BGS_KEY_LOCATION').and_return(ssl_key_path)
+
+        allow(File).to receive(:binread).and_return("\x05\x00\x68\x65\x6c\x6c\x6f")
+        allow(File).to receive(:read).with(ssl_cert_path).and_return('mock cert content')
+        allow(File).to receive(:read).with(ssl_key_path).and_return('mock key content')
+
+        allow(OpenSSL::PKey::RSA).to receive(:new).with('mock key content').and_return('mock key')
+        allow(OpenSSL::X509::Certificate).to receive(:new).with('mock cert content').and_return('mock cert')
+
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
+
+        stub_request(:post, url)
+          .with(
+            headers: {
+              'Accept' => '*/*',
+              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+              'Authorization' => 'fake.jwt.token',
+              'Content-Type' => 'multipart/form-data',
+              'Host' => 'fake.api.claimevidence.comapi',
+              'User-Agent' => 'Ruby',
+              'X-Folder-Uri' => 'VETERAN:FILENUMBER:500000000'
+            }
+          ).to_return(status: 200, body: '', headers: {})
+      end
+
+      it 'uploads document' do
+        ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
+        expect(WebMock).to have_requested(:post, url)
+      end
     end
   end
 
@@ -248,6 +309,24 @@ describe ExternalApi::ClaimEvidenceService do
     before do
       subject::REGION ||= aws_region
       subject::AWS_COMPREHEND_SCORE ||= 0.95
+      stub_request(:put, 'http://169.254.169.254/latest/api/token')
+        .with(
+          headers: {
+            'Accept' => '*/*',
+            'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+            'User-Agent' => 'aws-sdk-ruby2/2.11.632',
+            'X-Aws-Ec2-Metadata-Token-Ttl-Seconds' => '21600'
+          }
+        ).to_return(status: 200, body: '', headers: {})
+
+      stub_request(:get, 'http://169.254.169.254/latest/meta-data/iam/security-credentials/')
+        .with(
+          headers: {
+            'Accept' => '*/*',
+            'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+            'User-Agent' => 'aws-sdk-ruby2/2.11.632'
+          }
+        ).to_return(status: 200, body: '', headers: {})
     end
     let(:ocr_data) { 'Some text string' }
     let(:stub_response) do

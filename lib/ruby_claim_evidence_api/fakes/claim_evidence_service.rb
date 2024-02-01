@@ -1,27 +1,29 @@
 # frozen_string_literal: true
 
-require 'ruby_claim_evidence_api/external_api/response'
+require "ruby_claim_evidence_api/external_api/response"
+require "faraday"
+require "faraday/multipart"
 module Fakes
   class ClaimEvidenceService
-    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
-    BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
-    SERVER = '/api/v1/rest'
-    DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
+    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
+    BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
+    SERVER = "/api/v1/rest"
+    DOCUMENT_TYPES_ENDPOINT = "/documenttypes"
     # this must start with http://
-    HTTP_PROXY = ENV['DEVVPN_PROXY']
-    CERT_LOCATION = ENV['SSL_CERT_FILE']
-    KEY_LOCATION = ENV['CLAIM_EVIDENCE_KEY_FILE']
-    CERT_PASSWORD = ENV['CLAIM_EVIDENCE_CERT_PASSPHRASE']
+    HTTP_PROXY = ENV["DEVVPN_PROXY"]
+    CERT_LOCATION = ENV["SSL_CERT_FILE"]
+    KEY_LOCATION = ENV["CLAIM_EVIDENCE_KEY_FILE"]
+    CERT_PASSWORD = ENV["CLAIM_EVIDENCE_CERT_PASSPHRASE"]
     HEADERS = {
-      "Content-Type": 'application/json',
-      "Accept": '*/*'
+      "Content-Type": "application/json",
+      "Accept": "*/*"
     }.freeze
     CREDENTIALS = Aws::Credentials.new(
-      ENV['AWS_ACCESS_KEY_ID'],
-      ENV['AWS_SECRET_ACCESS_KEY']
+      ENV["AWS_ACCESS_KEY_ID"],
+      ENV["AWS_SECRET_ACCESS_KEY"]
     )
-    REGION = ENV['AWS_DEFAULT_REGION']
-    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
+    REGION = ENV["AWS_DEFAULT_REGION"]
+    AWS_COMPREHEND_SCORE = ENV["AWS_COMPREHEND_SCORE"]
 
     class << self
       def document_types_request
@@ -34,9 +36,24 @@ module Fakes
 
       def ocr_document_request(doc_uuid)
         {
-          headers: HEADERS.merge("Content-Type": 'application/x-www-form-urlencoded'),
+          headers: HEADERS.merge("Content-Type": "application/x-www-form-urlencoded"),
           endpoint: "/files/#{doc_uuid}/data/ocr",
           method: :get
+        }
+      end
+
+      def upload_document_request(file, vet_file_number, doc_info)
+        body = {}
+        body[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
+        body[:payload] = Faraday::Multipart::ParamPart.new(doc_info, "application/json")
+        {
+          headers: HEADERS.merge(
+            "Content-Type": "multipart/form-data",
+            "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
+          ),
+          endpoint: "/files",
+          method: :post,
+          body: body
         }
       end
 
@@ -44,13 +61,13 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, "lib", "data", "DOCUMENT_TYPES.json")))
                    end
 
         if HTTP_PROXY
-          response.body['documentTypes']
+          response.body["documentTypes"]
         else
-          response['documentTypes']
+          response["documentTypes"]
         end
       end
 
@@ -58,13 +75,13 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, "lib", "data", "DOCUMENT_TYPES.json")))
                    end
 
         if HTTP_PROXY
-          response.body['alternativeDocumentTypes']
+          response.body["alternativeDocumentTypes"]
         else
-          response['alternativeDocumentTypes']
+          response["alternativeDocumentTypes"]
         end
       end
 
@@ -72,16 +89,21 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(ocr_document_request(doc_uuid))
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'OCR_DOCUMENT.json')))
+                     JSON.parse(IO.binread(File.join(Rails.root, "lib", "data", "OCR_DOCUMENT.json")))
                    end
 
         if HTTP_PROXY
-          response.body['currentVersion']['file']['text']
+          response.body["currentVersion"]["file"]["text"]
         else
-          response['currentVersion']['file']['text']
+          response["currentVersion"]["file"]["text"]
         end
       end
 
+      def upload_document(file, vet_file_number, doc_info)
+        use_faraday(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def use_faraday(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         url = URI::DEFAULT_PARSER.escape(BASE_URL)
         # The certs fail to successfully connect so SSL verification is disabled, but they still need to be present
@@ -102,12 +124,15 @@ module Fakes
             verify: !ApplicationController.dependencies_faked?
           }
         ) do |c|
+          c.request :multipart
           c.response :json
           c.adapter Faraday.default_adapter
+          c.options.timeout = 120
+          c.options.open_timeout = 120
         end
 
         sleep 1
-        MetricsService.record("api.fakes.notifications.claim.evidence #{method.to_s.upcase} request to #{url}",
+        MetricsService.record("api.fakes.claim.evidence #{method.to_s.upcase} request to #{url}",
                               service: :claim_evidence,
                               name: endpoint) do
           case method
@@ -128,6 +153,7 @@ module Fakes
           end
         end
       end
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
@@ -147,7 +173,7 @@ module Fakes
       def get_key_phrases(ocr_data, stub_response: false)
         key_phrase_parameters = {
           text: ocr_data,
-          language_code: 'en'
+          language_code: "en"
         }
         if stub_response == true
           aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases

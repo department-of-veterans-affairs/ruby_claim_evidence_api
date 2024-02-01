@@ -3,13 +3,15 @@
 require 'pry'
 require 'httpi'
 require 'active_support/all'
-require 'ruby_claim_evidence_api/external_api/response.rb'
+require 'ruby_claim_evidence_api/external_api/response'
 require 'aws-sdk'
 require 'base64'
 
 module ExternalApi
   # Establishes connection between Claims Evidence API, AWS, and Caseflow
   # Handles HTTP Requests, Errors, and business logic to Claims Evidence API
+
+  # rubocop:disable Metrics/ClassLength
   class ClaimEvidenceService
     # Environment Variables
     TOKEN_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
@@ -44,6 +46,20 @@ module ExternalApi
         }
       end
 
+      def upload_document_request(file_path, vet_file_number, doc_info)
+        request = set_upload_document_form_data_for_request(
+          request: Net::HTTP::Post.new(file_upload_uri),
+          payload: doc_info,
+          file_path: file_path
+        )
+
+        jwt_token = generate_jwt_token
+        request['Authorization'] = jwt_token
+        request['X-Folder-URI'] = "VETERAN:FILENUMBER:#{vet_file_number}"
+
+        request
+      end
+
       def document_types
         send_ce_api_request(document_types_request).body['documentTypes']
       end
@@ -56,7 +72,35 @@ module ExternalApi
         send_ce_api_request(ocr_document_request(doc_uuid)).body['currentVersion']['file']['text']
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      def upload_document(file, vet_file_number, doc_info)
+        send_multipart_post_request(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
+      def send_multipart_post_request(request)
+        # Create Net::HTTP and configure
+        http = Net::HTTP.new(request.uri.host, request.uri.port)
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+        http.ssl_version = :TLSv1_2
+        http.ca_file = CERT_FILE_LOCATION
+        http.cert = OpenSSL::X509::Certificate.new(File.read(ENV['BGS_CERT_LOCATION']))
+        http.key = OpenSSL::PKey::RSA.new(File.read(ENV['BGS_KEY_LOCATION']))
+
+        # Send Request
+        if Object.const_defined?('MetricsService')
+          MetricsService.record("api.claim.evidence POST request to '#{BASE_URL}#{SERVER}/files'",
+                                service: :claim_evidence,
+                                name: '/files') do
+            handle_http_response(http, request)
+          end
+        else
+          handle_http_response(http, request)
+        end
+      end
+
+      # rubocop:disable Metrics/PerceivedComplexity
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         jwt_token = generate_jwt_token
 
@@ -81,13 +125,16 @@ module ExternalApi
                                 name: endpoint) do
             case method
             when :get
-              begin
-                response = HTTPI.get(request)
-                service_response = ExternalApi::Response.new(response)
-              rescue
-                service_response = ExternalApi::Response.new(response)
-                fail service_response.error if service_response.error.present?
-              end
+              response = HTTPI.get(request)
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+
+              service_response
+            when :post
+              response = HTTPI.post(request)
+              service_response = ExternalApi::Response.new(response)
+              fail service_response.error if service_response.error.present?
+
               service_response
             else
               fail NotImplementedError
@@ -96,23 +143,27 @@ module ExternalApi
         else
           case method
           when :get
-            begin
-              response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
-            rescue
-              service_response = ExternalApi::Response.new(response)
-              fail service_response.error if service_response.error.present?
-            end
+            response = HTTPI.get(request)
+            service_response = ExternalApi::Response.new(response)
+            fail service_response.error if service_response.error.present?
+
+            service_response
+          when :post
+            response = HTTPI.post(request)
+            service_response = ExternalApi::Response.new(response)
+            fail service_response.error if service_response.error.present?
+
             service_response
           else
             fail NotImplementedError
           end
         end
       end
+      # rubocop:enable Metrics/PerceivedComplexity, Metrics/AbcSize, Metrics/CyclomaticComplexity
 
       def aws_client
         @aws_client ||= Aws::Comprehend::Client.new(
-          region: REGION,
+          region: REGION
         )
       end
 
@@ -152,6 +203,29 @@ module ExternalApi
 
       private
 
+      def handle_http_response(http, request)
+        http.start do |https|
+          response = https.request(request)
+          service_response = ExternalApi::Response.new(response, uses_net_http: true)
+          fail service_response.error if service_response.error.present?
+
+          return service_response
+        end
+      end
+
+      def set_upload_document_form_data_for_request(request:, payload:, file_path:)
+        file_content = File.binread(file_path)
+        form_data = []
+        form_data << ['file', file_content, { filename: File.basename(file_path), content_type: 'application/pdf' }]
+        form_data << ['payload', payload.to_json]
+        request.set_form form_data, 'multipart/form-data'
+        request
+      end
+
+      def file_upload_uri
+        @file_upload_uri = URI("http://#{BASE_URL}#{SERVER}/files")
+      end
+
       def generate_jwt_token
         header = {
           typ: 'JWT',
@@ -162,7 +236,7 @@ module ExternalApi
           jti: SecureRandom.uuid,
           iat: current_timestamp,
           iss: TOKEN_ISSUER,
-          applicationId: TOKEN_ISSUER,
+          applicationID: TOKEN_ISSUER,
           userID: TOKEN_USER,
           stationID: TOKEN_STATION_ID
         }
@@ -183,6 +257,6 @@ module ExternalApi
         encoded_source.tr('/', '_')
       end
     end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
   end
+  # rubocop:enable Metrics/ClassLength, Metrics/MethodLength
 end

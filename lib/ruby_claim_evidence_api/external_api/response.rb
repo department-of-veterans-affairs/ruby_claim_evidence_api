@@ -9,12 +9,11 @@ module ExternalApi
   class Response
     attr_reader :resp, :code
 
-    def initialize(resp)
+    def initialize(resp, uses_net_http: false)
       @resp = resp
-      @code = @resp.try(:code) || @resp.try(:status)
+      @uses_net_http = uses_net_http
+      @code = @resp.try(:code).to_i || @resp.try(:status)
     end
-
-    def data; end
 
     # Wrapper method to check for errors
     def error
@@ -67,8 +66,12 @@ module ExternalApi
     # Gets the error message from the response
     def error_message
       return 'No error message from ClaimEvidence' if body.empty?
-      
-      body['message'] || body['errors'][0]['message']
+
+      if @uses_net_http == true
+        body['message']
+      else
+        body['messages'] || body['errors'][0]['message']
+      end
     end
   end
 end
