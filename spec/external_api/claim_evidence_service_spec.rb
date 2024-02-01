@@ -4,6 +4,7 @@ require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
 require 'aws-sdk'
 require './spec/external_api/spec_helper'
+require 'webmock/rspec'
 
 describe ExternalApi::ClaimEvidenceService do
   # Fake/Testing ENV variables
@@ -220,12 +221,44 @@ describe ExternalApi::ClaimEvidenceService do
       expect(get_ocr_document).to eq('Lorem ipsum')
     end
 
-    it 'upload_document' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
-      allow(File).to receive(:read).and_return("\x05\x00\x68\x65\x6c\x6c\x6f")
-      allow(HTTPI).to receive(:post).and_return(success_post_upload_document_response)
-      upload_document = ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
-      expect(upload_document).to be_present
+    describe 'with multipart Net HTTP request' do
+      let(:url) { 'https://fake.api.claimevidence.comapi/v1/rest/files' }
+      let(:ssl_key_path) { 'path/to/key' }
+      let(:ssl_cert_path) { 'path/to/cert' }
+
+      before do
+        allow(ENV).to receive(:[]).with('BGS_CERT_LOCATION').and_return(ssl_cert_path)
+        allow(ENV).to receive(:[]).with('BGS_KEY_LOCATION').and_return(ssl_key_path)
+
+        allow(File).to receive(:binread).and_return("\x05\x00\x68\x65\x6c\x6c\x6f")
+        allow(File).to receive(:read).with(ssl_cert_path).and_return('mock cert content')
+        allow(File).to receive(:read).with(ssl_key_path).and_return('mock key content')
+
+        allow(OpenSSL::PKey::RSA).to receive(:new).with('mock key content').and_return('mock key')
+        allow(OpenSSL::X509::Certificate).to receive(:new).with('mock cert content').and_return('mock cert')
+
+        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
+
+        stub_request(:post, url)
+          .with(
+            headers: {
+              'Accept' => '*/*',
+              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+              'Authorization' => 'fake.jwt.token',
+              'Content-Type' => 'multipart/form-data',
+              'Host' => 'fake.api.claimevidence.comapi',
+              'User-Agent' => 'Ruby',
+              'X-Folder-Uri' => 'VETERAN:FILENUMBER:500000000'
+            }
+          ).to_return(status: 200, body: '', headers: {})
+      end
+
+      it 'uploads document' do
+        # allow(Net::HTTP).to receive(:post).and_return(success_post_upload_document_response)
+        ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
+        expect(WebMock).to have_requested(:post, url)
+        # expect(upload_document).to be_present
+      end
     end
   end
 
