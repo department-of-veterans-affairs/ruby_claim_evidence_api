@@ -254,10 +254,8 @@ describe ExternalApi::ClaimEvidenceService do
       end
 
       it 'uploads document' do
-        # allow(Net::HTTP).to receive(:post).and_return(success_post_upload_document_response)
         ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
         expect(WebMock).to have_requested(:post, url)
-        # expect(upload_document).to be_present
       end
     end
   end
