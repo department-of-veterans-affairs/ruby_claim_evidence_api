@@ -223,7 +223,7 @@ module ExternalApi
       end
 
       def file_upload_uri
-        @file_upload_uri = URI("#{BASE_URL}#{SERVER}/files")
+        @file_upload_uri = URI("http://#{BASE_URL}#{SERVER}/files")
       end
 
       def generate_jwt_token
