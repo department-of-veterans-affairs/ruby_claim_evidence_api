@@ -11,15 +11,17 @@ describe ExternalApi::VeteranFileFetcher do
 
   describe '.fetch_veteran_file_list' do
     it 'successfully calls the endpoint' do
+      vet_file_number = '123456789'
+
       expect(mock_ce_service).to receive(:send_ce_api_request).with(
         endpoint: '/folders/files:search',
         query: {},
-        headers: { 'X-Folder-URI': 'VETERAN:FILENUMBER:123456789' },
+        headers: { 'X-Folder-URI': "VETERAN:FILENUMBER:#{vet_file_number}" },
         method: :post,
         body: nil
       )
 
-      described.fetch_veteran_file_list(veteran_file_number: '123456789')
+      described.fetch_veteran_file_list(veteran_file_number: vet_file_number)
     end
   end
 end
