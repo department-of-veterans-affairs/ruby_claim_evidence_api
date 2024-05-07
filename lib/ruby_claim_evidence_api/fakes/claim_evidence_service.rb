@@ -99,6 +99,16 @@ module Fakes
         end
       end
 
+      def get_document_content(doc_uuid)
+        response = if HTTP_PROXY
+                     use_faraday(ocr_document_request(doc_uuid))
+                   else
+                     { body: 'pdf binary string' }
+                   end
+
+        response.body
+      end
+
       def upload_document(file, vet_file_number, doc_info)
         use_faraday(upload_document_request(file, vet_file_number, doc_info)).body
       end
