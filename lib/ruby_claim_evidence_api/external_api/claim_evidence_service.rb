@@ -60,15 +60,6 @@ module ExternalApi
         request
       end
 
-      # doc_uuid refers to Caseflow Document's series id
-      def get_document_content_request(doc_uuid)
-        {
-          headers: HEADERS,
-          endpoint: "/files/#{doc_uuid}/content",
-          method: :get
-        }
-      end
-
       def document_types
         send_ce_api_request(document_types_request).body['documentTypes']
       end
@@ -83,10 +74,6 @@ module ExternalApi
 
       def upload_document(file, vet_file_number, doc_info)
         send_multipart_post_request(upload_document_request(file, vet_file_number, doc_info)).body
-      end
-
-      def get_document_content(doc_uuid)
-        send_ce_api_request(get_document_content_request(doc_uuid)).body
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity

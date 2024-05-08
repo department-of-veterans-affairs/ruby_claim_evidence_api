@@ -7,6 +7,10 @@ module ExternalApi
       get_file_list(veteran_file_number)
     end
 
+    def get_document_content(doc_series_id:)
+      ExternalApi::ClaimEvidenceService.send_ce_api_request(get_document_content_request(doc_series_id))
+    end
+
     private
 
     def get_file_list(veteran_file_number)
@@ -27,6 +31,21 @@ module ExternalApi
       {
         "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
       }
+    end
+
+    def get_document_content_request(doc_series_id)
+      {
+        headers: basic_header,
+        endpoint: "/files/#{doc_series_id}/content",
+        method: :get
+      }
+    end
+
+    def basic_header
+      {
+        "Content-Type": 'application/json',
+        "Accept": '*/*'
+      }.freeze
     end
   end
 end
