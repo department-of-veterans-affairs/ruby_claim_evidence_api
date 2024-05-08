@@ -1,0 +1,49 @@
+{
+  "page": {
+    "totalPages": 2,
+    "requestedResultsPerPage": 1,
+    "currentPage": 2,
+    "totalResults": 2
+  },
+  "files": [
+    {
+      "owner": {
+        "type": "VETERAN",
+        "id": "123456789"
+      },
+      "uuid": "22222222-2222-2222-2222-222222222222",
+      "currentVersionUuid": "22222222-2222-2222-2222-222222222222",
+      "currentVersion": {
+        "systemData": {
+          "uploadedDateTime": "2019-03-28T22:48:53",
+          "contentName": "1234.pdf",
+          "mimeType": "application/pdf",
+          "uploadSource": "BVA"
+        },
+        "providerData": {
+          "subject": "BVA Decision",
+          "documentTypeId": 27,
+          "ocrStatus": "Failure to Process",
+          "newMail": true,
+          "bookmarks": {
+            "VBA": {
+              "isDefaultRealm": true
+            }
+          },
+          "systemSource": "BVA",
+          "isAnnotated": false,
+          "modifiedDateTime": "2023-03-22T01:01:40",
+          "numberOfContentions": 0,
+          "readByCurrentUser": false,
+          "veteranLastName": "SMITH",
+          "dateVaReceivedDocument": "2019-03-28",
+          "hasContentionAnnotations": false,
+          "veteranFirstName": "JOHN",
+          "contentSource": "BVA",
+          "actionable": false,
+          "lastOpenedDocument": false
+        }
+      }
+    }
+  ]
+}

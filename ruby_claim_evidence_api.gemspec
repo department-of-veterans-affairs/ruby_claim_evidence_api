@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name    = 'ruby_claim_evidence_api'
-  s.version = '0.0.1'
+  s.version = '0.1.0'
   s.summary = 'Claim Evidence API so that Caseflow can utilize it'
   s.license = 'CC0' # This work is a work of the US Federal Government,
   #               This work is Public Domain in the USA, and CC0 Internationally
