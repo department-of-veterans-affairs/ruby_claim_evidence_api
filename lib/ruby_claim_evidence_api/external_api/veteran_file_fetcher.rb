@@ -4,7 +4,7 @@ module ExternalApi
   # Fetches CE API documents for a given veteran
   class VeteranFileFetcher
     def fetch_veteran_file_list(veteran_file_number:)
-      get_file_list(veteran_file_number)
+      get_file_list(veteran_file_number: veteran_file_number)
     end
 
     def get_document_content(doc_series_id:)
@@ -13,13 +13,13 @@ module ExternalApi
 
     private
 
-    def get_file_list(veteran_file_number)
+    def get_file_list(veteran_file_number:, query: {}, body: nil)
       ExternalApi::ClaimEvidenceService.send_ce_api_request(
         endpoint: file_folders_search_endpoint,
-        query: {},
+        query: query,
         headers: x_folder_uri_header(veteran_file_number),
         method: :post,
-        body: nil
+        body: body
       )
     end
 
