@@ -20,7 +20,7 @@ module ExternalApi
     end
 
     def get_document_content(doc_series_id:)
-      ExternalApi::ClaimEvidenceService.send_ce_api_request(get_document_content_request(doc_series_id))
+      claim_evidence_service.send_ce_api_request(get_document_content_request(doc_series_id))
     end
 
     private
