@@ -3,6 +3,7 @@
 require "ruby_claim_evidence_api/external_api/response"
 require "faraday"
 require "faraday/multipart"
+require 'aws-sdk'
 module Fakes
   class ClaimEvidenceService
     JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
@@ -101,6 +102,10 @@ module Fakes
 
       def upload_document(file, vet_file_number, doc_info)
         use_faraday(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
+        use_faraday(endpoint: endpoint, query: query, headers: headers, method: method, body: body)
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
