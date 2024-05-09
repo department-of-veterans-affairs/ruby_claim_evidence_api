@@ -2,6 +2,7 @@
 
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/response'
+require 'ruby_claim_evidence_api/helpers/string_parser'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
@@ -20,7 +21,10 @@ module ExternalApi
     end
 
     def get_document_content(doc_series_id:)
-      claim_evidence_service.send_ce_api_request(get_document_content_request(doc_series_id))
+      doc_series_id = parse_document_id(doc_series_id)
+      response = claim_evidence_service.send_ce_api_request(get_document_content_request(doc_series_id))
+      # Returning this value as the api call returns a byte string and not a JSON body
+      response.resp.body
     end
 
     private
