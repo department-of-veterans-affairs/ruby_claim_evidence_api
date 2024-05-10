@@ -28,4 +28,37 @@ describe Fakes::VeteranFileFetcher do
       described.fetch_veteran_file_list(veteran_file_number: '123456789')
     end
   end
+
+  describe '.fetch_veteran_file_list_by_date_range' do
+    it 'calls the faked ClaimEvidenceService with date range filters' do
+
+      begin_date_range = '2024-01-01'
+      end_date_range = '2024-05-01'
+
+      expect(mock_fake_ce_service).to receive(:send_ce_api_request).once.with(
+        endpoint: '/folders/files:search',
+        query: {},
+        headers: { "Content-Type": 'application/json', "Accept": '*/*', "X-Folder-URI": "VETERAN:FILENUMBER:123456789" },
+        method: :post,
+        body: {
+          "pageRequest": {
+            "resultsPerPage": 20,
+            "page": 1
+          },
+          "filters": {
+            "systemData.uploadedDateTime" => {
+              "evaluationType" => "BETWEEN",
+              "value" => [begin_date_range, end_date_range]
+            }
+          }
+        }
+      ).and_return(file_folders_search_single_page)
+
+      described.fetch_veteran_file_list_by_date_range(
+        veteran_file_number: '123456789',
+        begin_date_range: begin_date_range,
+        end_date_range: end_date_range
+      )
+    end
+  end
 end
