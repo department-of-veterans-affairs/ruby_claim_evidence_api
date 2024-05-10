@@ -6,20 +6,37 @@ require 'ruby_claim_evidence_api/external_api/response'
 module ExternalApi
   # Fetches CE API documents for a given veteran
   class VeteranFileFetcher
-    def fetch_veteran_file_list(veteran_file_number:)
-      initial_search = file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body)
+    def fetch_veteran_file_list(veteran_file_number:, filters: {})
+      fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
+    end
+
+    def fetch_veteran_file_list_by_date_range(veteran_file_number:, begin_date_range:, end_date_range:)
+      filters = {
+        "systemData.uploadedDateTime" => {
+          "evaluationType" => "BETWEEN",
+          "value" => [begin_date_range, end_date_range]
+        }
+      }
+      fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
+    end
+
+    private
+
+    def fetch_paginated_documents(veteran_file_number:, filters: {})
+      initial_search = file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body(filters: filters))
       initial_results = initial_search.body
 
+      total_result = initial_results['page']['totalResults'].to_i
       total_pages = initial_results['page']['totalPages'].to_i
       current_page = initial_results['page']['currentPage'].to_i
 
-      return initial_search if current_page == total_pages
+      if total_result == 0 || current_page == total_pages
+        return initial_search 
+      end
 
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
     end
-
-    private
 
     def file_folders_search(veteran_file_number:, query: {}, body: nil)
       claim_evidence_service.send_ce_api_request(
@@ -73,6 +90,8 @@ module ExternalApi
 
     def x_folder_uri_header(veteran_file_number)
       {
+        "Content-Type": 'application/json',
+        "Accept": '*/*',
         "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
       }
     end
