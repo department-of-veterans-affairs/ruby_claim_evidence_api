@@ -2,11 +2,12 @@
 
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/response'
-require 'ruby_claim_evidence_api/helpers/string_parser'
+require_relative '../helpers/string_parser'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
   class VeteranFileFetcher
+    include StringParser
     def fetch_veteran_file_list(veteran_file_number:)
       initial_search = file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body)
       initial_results = initial_search.body
