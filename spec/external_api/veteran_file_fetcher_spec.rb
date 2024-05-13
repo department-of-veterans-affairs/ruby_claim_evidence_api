@@ -44,6 +44,8 @@ describe ExternalApi::VeteranFileFetcher do
     ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
   end
 
+  let(:document_content_response) { ExternalApi::Response.new(HTTPI::Response.new(200, {}, 'PDF% abc123')) }
+
   describe '.fetch_veteran_file_list' do
     context 'with a single result page' do
       it 'successfully calls the API' do
@@ -69,6 +71,15 @@ describe ExternalApi::VeteranFileFetcher do
         expect(response.body['files'][0]['uuid']).to eq '11111111-1111-1111-1111-111111111111'
         expect(response.body['files'][1]['uuid']).to eq '22222222-2222-2222-2222-222222222222'
       end
+    end
+  end
+
+  describe '.get_document_content' do
+    it 'calls the ClaimEvidenceService adn returns a byte string' do
+      expect(mock_ce_service).to receive(:send_ce_api_request).once.and_return(document_content_response)
+
+      response = described.get_document_content(doc_series_id: '123456789')
+      expect(response).to eq 'PDF% abc123'
     end
   end
 end

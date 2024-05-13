@@ -21,7 +21,7 @@ describe Fakes::VeteranFileFetcher do
     ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
   end
 
-  let(:fake_byte_string) { 'PDF% EwyxLoOCsds#4W23PL' }
+  let(:document_content_response) { ExternalApi::Response.new(HTTPI::Response.new(200, {}, 'PDF% EwyxLoOCsds#4W23PL')) }
 
   describe '.fetch_veteran_file_list' do
     it 'calls the faked ClaimEvidenceService' do
@@ -33,7 +33,7 @@ describe Fakes::VeteranFileFetcher do
 
   describe '.get_document_content' do
     it 'calls the faked ClaimEvidenceService' do
-      expect(mock_fake_ce_service).to receive(:send_ce_api_request).once.and_return(fake_byte_string)
+      expect(mock_fake_ce_service).to receive(:send_ce_api_request).once.and_return(document_content_response)
 
       described.get_document_content(doc_series_id: '123456789')
     end
