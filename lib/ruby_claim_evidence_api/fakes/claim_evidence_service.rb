@@ -126,7 +126,7 @@ module Fakes
           ssl: {
             client_cert: client_cert,
             client_key: client_key,
-            verify: !ApplicationController.dependencies_faked?
+            verify: false
           }
         ) do |c|
           c.request :multipart
@@ -137,25 +137,26 @@ module Fakes
         end
 
         sleep 1
-        MetricsService.record("api.fakes.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
-          case method
-          when :get
-            response = conn.get(SERVER + endpoint, query)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
-            service_response
-          when :post
-            response = conn.post(SERVER + endpoint, body)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
-            service_response
-          else
-            fail NotImplementedError
+        if Object.const_defined?('MetricsService')
+          MetricsService.record("api.fakes.claim.evidence #{method.to_s.upcase} request to #{url}",
+                                service: :claim_evidence,
+                                name: endpoint) do
+            handle_faraday_responses(
+              conn: conn,
+              method: method,
+              endpoint: endpoint,
+              body: body,
+              query: query
+            )
           end
+        else
+          handle_faraday_responses(
+            conn: conn,
+            method: method,
+            endpoint: endpoint,
+            body: body,
+            query: query
+          )
         end
       end
       # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
@@ -197,6 +198,27 @@ module Fakes
         ocr_data = get_ocr_document(doc_uuid)
         key_phrases = get_key_phrases(ocr_data, stub_response)
         filter_key_phrases_by_score(key_phrases)
+      end
+
+      private
+
+      def handle_faraday_responses(conn:, method:, endpoint:, query:, body:)
+        case method
+        when :get
+          response = conn.get(SERVER + endpoint, query)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        when :post
+          response = conn.post(SERVER + endpoint, body)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        else
+          fail NotImplementedError
+        end
       end
     end
   end
