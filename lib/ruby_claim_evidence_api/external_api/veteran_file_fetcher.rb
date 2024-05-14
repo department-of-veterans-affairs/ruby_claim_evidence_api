@@ -3,7 +3,7 @@
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/response'
 require_relative '../helpers/string_parser'
-require 'ruby_claim_evidence_api'
+require 'ruby_claim_evidence_api/claim_evidence_api'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
