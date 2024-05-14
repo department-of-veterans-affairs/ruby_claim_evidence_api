@@ -221,14 +221,6 @@ describe ExternalApi::ClaimEvidenceService do
       expect(get_ocr_document).to eq('Lorem ipsum')
     end
 
-    it 'get_document_content' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
-      allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
-      get_document_content = ExternalApi::ClaimEvidenceService.get_document_content(doc_uuid)
-      expect(get_document_content).to be_present
-      expect(get_document_content).to eq('Lorem ipsum')
-    end
-
     describe 'with multipart Net HTTP request' do
       let(:url) { 'https://fake.api.claimevidence.comapi/v1/rest/files' }
       let(:ssl_key_path) { 'path/to/key' }

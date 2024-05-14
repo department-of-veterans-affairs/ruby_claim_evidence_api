@@ -29,7 +29,7 @@ class MockApiClient
 
   def files_content_response
     ExternalApi::Response.new(
-      HTTPI::Response.new(200, {}, { status: 'ok' })
+      HTTPI::Response.new(200, {}, File.binread('spec/support/get_document_content.pdf'))
     )
   end
 
