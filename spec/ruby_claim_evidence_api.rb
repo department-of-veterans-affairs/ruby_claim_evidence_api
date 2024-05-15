@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ruby_claim_evidence_api'
+require 'ruby_claim_evidence_api/ruby_claim_evidence_api'
 require './spec/external_api/spec_helper'
 
 describe RubyClaimEvidenceApi do
