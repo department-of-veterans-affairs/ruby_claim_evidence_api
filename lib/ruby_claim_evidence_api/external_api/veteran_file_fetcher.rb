@@ -3,19 +3,22 @@
 require 'httpi'
 require 'ruby_claim_evidence_api/api_base'
 require 'ruby_claim_evidence_api/external_api/response'
+require_relative '../helpers/string_parser'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
   class VeteranFileFetcher < ApiBase
+    include StringParser
+
     def fetch_veteran_file_list(veteran_file_number:, filters: {})
       fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
     end
 
     def fetch_veteran_file_list_by_date_range(veteran_file_number:, begin_date_range:, end_date_range:)
       filters = {
-        "systemData.uploadedDateTime" => {
-          "evaluationType" => "BETWEEN",
-          "value" => [begin_date_range, end_date_range]
+        'systemData.uploadedDateTime' => {
+          'evaluationType' => 'BETWEEN',
+          'value' => [begin_date_range, end_date_range]
         }
       }
       fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
@@ -37,6 +40,13 @@ module ExternalApi
 
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
+    end
+
+    def get_document_content(doc_series_id:)
+      doc_series_id = parse_document_id(doc_series_id)
+      response = api_client.send_ce_api_request(get_document_content_request(doc_series_id))
+      # Returning this value as the api call returns a byte string and not a JSON body
+      response.resp.body
     end
 
     private
@@ -97,6 +107,21 @@ module ExternalApi
         "Accept": '*/*',
         "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
       }
+    end
+
+    def get_document_content_request(doc_series_id)
+      {
+        headers: basic_header,
+        endpoint: "/files/#{doc_series_id}/content",
+        method: :get
+      }
+    end
+
+    def basic_header
+      {
+        "Content-Type": 'application/json',
+        "Accept": '*/*'
+      }.freeze
     end
   end
 end

@@ -1,30 +1,31 @@
 # frozen_string_literal: true
 
-require "ruby_claim_evidence_api/external_api/response"
-require "faraday"
-require "faraday/multipart"
+require 'ruby_claim_evidence_api/external_api/response'
+require 'faraday'
+require 'faraday/multipart'
 require 'aws-sdk'
 module Fakes
+  # Mock ClaimEvidenceService. Returns CE API responses when connected to DEV_VPN proxy, and hard-coded responses when not
   class ClaimEvidenceService
-    JWT_TOKEN = ENV["CLAIM_EVIDENCE_JWT_TOKEN"]
-    BASE_URL = ENV["CLAIM_EVIDENCE_API_URL"]
-    SERVER = "/api/v1/rest"
-    DOCUMENT_TYPES_ENDPOINT = "/documenttypes"
+    JWT_TOKEN = ENV['CLAIM_EVIDENCE_JWT_TOKEN']
+    BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
+    SERVER = '/api/v1/rest'
+    DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     # this must start with http://
-    HTTP_PROXY = ENV["DEVVPN_PROXY"]
-    CERT_LOCATION = ENV["SSL_CERT_FILE"]
-    KEY_LOCATION = ENV["CLAIM_EVIDENCE_KEY_FILE"]
-    CERT_PASSWORD = ENV["CLAIM_EVIDENCE_CERT_PASSPHRASE"]
+    HTTP_PROXY = ENV['DEVVPN_PROXY']
+    CERT_LOCATION = ENV['SSL_CERT_FILE']
+    KEY_LOCATION = ENV['CLAIM_EVIDENCE_KEY_FILE']
+    CERT_PASSWORD = ENV['CLAIM_EVIDENCE_CERT_PASSPHRASE']
     HEADERS = {
-      "Content-Type": "application/json",
-      "Accept": "*/*"
+      "Content-Type": 'application/json',
+      "Accept": '*/*'
     }.freeze
     CREDENTIALS = Aws::Credentials.new(
-      ENV["AWS_ACCESS_KEY_ID"],
-      ENV["AWS_SECRET_ACCESS_KEY"]
+      ENV['AWS_ACCESS_KEY_ID'],
+      ENV['AWS_SECRET_ACCESS_KEY']
     )
-    REGION = ENV["AWS_DEFAULT_REGION"]
-    AWS_COMPREHEND_SCORE = ENV["AWS_COMPREHEND_SCORE"]
+    REGION = ENV['AWS_DEFAULT_REGION']
+    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
       def document_types_request
@@ -37,7 +38,7 @@ module Fakes
 
       def ocr_document_request(doc_uuid)
         {
-          headers: HEADERS.merge("Content-Type": "application/x-www-form-urlencoded"),
+          headers: HEADERS.merge("Content-Type": 'application/x-www-form-urlencoded'),
           endpoint: "/files/#{doc_uuid}/data/ocr",
           method: :get
         }
@@ -45,14 +46,14 @@ module Fakes
 
       def upload_document_request(file, vet_file_number, doc_info)
         body = {}
-        body[:file] = Faraday::Multipart::FilePart.new(file, "application/pdf")
-        body[:payload] = Faraday::Multipart::ParamPart.new(doc_info, "application/json")
+        body[:file] = Faraday::Multipart::FilePart.new(file, 'application/pdf')
+        body[:payload] = Faraday::Multipart::ParamPart.new(doc_info, 'application/json')
         {
           headers: HEADERS.merge(
-            "Content-Type": "multipart/form-data",
+            "Content-Type": 'multipart/form-data',
             "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}"
           ),
-          endpoint: "/files",
+          endpoint: '/files',
           method: :post,
           body: body
         }
@@ -62,13 +63,13 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, "lib", "data", "DOCUMENT_TYPES.json")))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
                    end
 
         if HTTP_PROXY
-          response.body["documentTypes"]
+          response.body['documentTypes']
         else
-          response["documentTypes"]
+          response['documentTypes']
         end
       end
 
@@ -76,13 +77,13 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(document_types_request)
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, "lib", "data", "DOCUMENT_TYPES.json")))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'DOCUMENT_TYPES.json')))
                    end
 
         if HTTP_PROXY
-          response.body["alternativeDocumentTypes"]
+          response.body['alternativeDocumentTypes']
         else
-          response["alternativeDocumentTypes"]
+          response['alternativeDocumentTypes']
         end
       end
 
@@ -90,13 +91,13 @@ module Fakes
         response = if HTTP_PROXY
                      use_faraday(ocr_document_request(doc_uuid))
                    else
-                     JSON.parse(IO.binread(File.join(Rails.root, "lib", "data", "OCR_DOCUMENT.json")))
+                     JSON.parse(IO.binread(File.join(Rails.root, 'lib', 'data', 'OCR_DOCUMENT.json')))
                    end
 
         if HTTP_PROXY
-          response.body["currentVersion"]["file"]["text"]
+          response.body['currentVersion']['file']['text']
         else
-          response["currentVersion"]["file"]["text"]
+          response['currentVersion']['file']['text']
         end
       end
 
@@ -126,7 +127,7 @@ module Fakes
           ssl: {
             client_cert: client_cert,
             client_key: client_key,
-            verify: !ApplicationController.dependencies_faked?
+            verify: false
           }
         ) do |c|
           c.request :multipart
@@ -137,25 +138,26 @@ module Fakes
         end
 
         sleep 1
-        MetricsService.record("api.fakes.claim.evidence #{method.to_s.upcase} request to #{url}",
-                              service: :claim_evidence,
-                              name: endpoint) do
-          case method
-          when :get
-            response = conn.get(SERVER + endpoint, query)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
-            service_response
-          when :post
-            response = conn.post(SERVER + endpoint, body)
-            service_response = ExternalApi::Response.new(response)
-            fail service_response.error if service_response.error.present?
-
-            service_response
-          else
-            fail NotImplementedError
+        if Object.const_defined?('MetricsService')
+          MetricsService.record("api.fakes.claim.evidence #{method.to_s.upcase} request to #{url}",
+                                service: :claim_evidence,
+                                name: endpoint) do
+            handle_faraday_responses(
+              conn: conn,
+              method: method,
+              endpoint: endpoint,
+              body: body,
+              query: query
+            )
           end
+        else
+          handle_faraday_responses(
+            conn: conn,
+            method: method,
+            endpoint: endpoint,
+            body: body,
+            query: query
+          )
         end
       end
       # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
@@ -178,7 +180,7 @@ module Fakes
       def get_key_phrases(ocr_data, stub_response: false)
         key_phrase_parameters = {
           text: ocr_data,
-          language_code: "en"
+          language_code: 'en'
         }
         if stub_response == true
           aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
@@ -197,6 +199,27 @@ module Fakes
         ocr_data = get_ocr_document(doc_uuid)
         key_phrases = get_key_phrases(ocr_data, stub_response)
         filter_key_phrases_by_score(key_phrases)
+      end
+
+      private
+
+      def handle_faraday_responses(conn:, method:, endpoint:, query:, body:)
+        case method
+        when :get
+          response = conn.get(SERVER + endpoint, query)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        when :post
+          response = conn.post(SERVER + endpoint, body)
+          service_response = ExternalApi::Response.new(response)
+          fail service_response.error if service_response.error.present?
+
+          service_response
+        else
+          fail NotImplementedError
+        end
       end
     end
   end
