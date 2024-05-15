@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'ruby_claim_evidence_api/ruby_claim_evidence_api'
+require 'ruby_claim_evidence_api/api_base'
 require './spec/external_api/spec_helper'
 
-describe RubyClaimEvidenceApi do
+describe ApiBase do
   context 'when canned API responses are used' do
     let(:described) { described_class.new(use_canned_api_responses: true) }
 

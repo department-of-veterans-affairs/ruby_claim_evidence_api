@@ -3,7 +3,7 @@
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
 require 'ruby_claim_evidence_api/fakes/mock_api_client'
 
-class RubyClaimEvidenceApi
+class ApiBase
   def initialize(use_canned_api_responses:)
     self.use_canned_api_responses = use_canned_api_responses
   end
