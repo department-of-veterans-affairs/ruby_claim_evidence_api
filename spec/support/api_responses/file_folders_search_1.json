@@ -1,0 +1,47 @@
+{
+  "page": {
+    "totalPages": 2,
+    "requestedResultsPerPage": 1,
+    "currentPage": 1,
+    "totalResults": 2
+  },
+  "files": [
+    {
+      "owner": {
+        "type": "VETERAN",
+        "id": "123456789"
+      },
+      "uuid": "11111111-1111-1111-1111-111111111111",
+      "currentVersionUuid": "11111111-1111-1111-1111-111111111111",
+      "currentVersion": {
+        "systemData": {
+          "uploadedDateTime": "2018-03-08T14:21:40",
+          "contentName": "123456789 - codesheet.pdf",
+          "mimeType": "application/pdf",
+          "uploadSource": "RATING"
+        },
+        "providerData": {
+          "subject": "Rating Decision - Codesheet",
+          "documentTypeId": 338,
+          "ocrStatus": "Failure to Process",
+          "newMail": false,
+          "bookmarks": {
+            "VBA": {
+              "isDefaultRealm": true
+            }
+          },
+          "systemSource": "RATING",
+          "isAnnotated": false,
+          "modifiedDateTime": "2018-03-08T14:21:40",
+          "numberOfContentions": 0,
+          "readByCurrentUser": false,
+          "dateVaReceivedDocument": "2018-03-08",
+          "hasContentionAnnotations": false,
+          "contentSource": "VBMS-R",
+          "actionable": false,
+          "lastOpenedDocument": false
+        }
+      }
+    }
+  ]
+}
