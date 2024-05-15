@@ -29,6 +29,9 @@ module ExternalApi
     REGION = ENV['AWS_REGION']
     AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
+    FILES_CONTENT_PATH = '/files/:uuid/content'
+    FOLDERS_FILES_SEARCH_PATH = '/folders/files:search'
+
     class << self
       def document_types_request
         {
