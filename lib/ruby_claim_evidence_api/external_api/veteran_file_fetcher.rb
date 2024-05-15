@@ -35,7 +35,7 @@ module ExternalApi
       current_page = initial_results['page']['currentPage'].to_i
 
       if total_result == 0 || current_page == total_pages
-        return initial_search 
+        return initial_search
       end
 
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
