@@ -8,66 +8,73 @@ require 'webmock/rspec'
 
 describe ExternalApi::ClaimEvidenceService do
   # Fake/Testing ENV variables
-  let(:base_url) { "https://fake.api.claimevidence.com" }
-  let(:client_secret) { "SOME-FAKE-KEY" }
-  let(:doc_uuid) { "SOME-FAKE-UUID" }
+  let(:base_url) { 'https://fake.api.claimevidence.com' }
+  let(:client_secret) { 'SOME-FAKE-KEY' }
+  let(:doc_uuid) { 'SOME-FAKE-UUID' }
   let(:service_id) { 'SOME-FAKE-SERVICE' }
   let(:aws_access_key_id) { 'dummykeyid' }
   let(:aws_secret_access_key) { 'dummysecretkey' }
   let(:aws_region) { 'us-gov-west-1' }
   let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
-  let(:file) { "/fake/file" }
-  let(:file_number) { "500000000" }
-  let(:doc_info) { {
-    file: file,
-    payload: {
-      contentName: "blah",
-      providerData: {
-        actionable: true,
-        documentTypeId: 1,
-        contentSource: "VISTA",
-        dateVaReceivedDocument: "2020-05-01"
-      } } } }
+  let(:file) { '/fake/file' }
+  let(:file_number) { '500000000' }
+  let(:doc_info) do
+    {
+      file: file,
+      payload: {
+        contentName: 'blah',
+        providerData: {
+          actionable: true,
+          documentTypeId: 1,
+          contentSource: 'VISTA',
+          dateVaReceivedDocument: '2020-05-01'
+        }
+      }
+    }
+  end
   before do
     ExternalApi::ClaimEvidenceService::BASE_URL = base_url
   end
 
-  let(:doc_types_body) { { 'documentTypes': [{
-      'id': 150,
-      'createDateTime': '2012-01-25',
-      'modifiedDateTime': '2016-03-01T16:18:56',
-      'name': 'L141',
-      'description': 'VA 21-8056 Request for Retirement Information from the Railroad Retirement Board
-                      and Certification of Information From Department of Veterans Affairs',
-      'isUserUploadable': true,
-      'is526': false,
-      'documentCategory': {
-        'id': 70,
+  let(:doc_types_body) do
+    { 'documentTypes': [
+      {
+        'id': 150,
         'createDateTime': '2012-01-25',
         'modifiedDateTime': '2016-03-01T16:18:56',
-        'description': 'Correspondence',
-        'subDescription': 'Miscellaneous '
-      }
-    },
-    {
-      'id': 152,
-      'createDateTime': '2012-01-25',
-      'modifiedDateTime': '2016-03-01T16:18:56',
-      'name': 'L143',
-      'description': 'VA 21-8358 Notice to Department of Veterans Affairs of Admission to Uniformed Services Hospital',
-      'isUserUploadable': true,
-      'is526': false,
-      'documentCategory': {
-        'id': 70,
+        'name': 'L141',
+        'description': 'VA 21-8056 Request for Retirement Information from the Railroad Retirement Board
+                        and Certification of Information From Department of Veterans Affairs',
+        'isUserUploadable': true,
+        'is526': false,
+        'documentCategory': {
+          'id': 70,
+          'createDateTime': '2012-01-25',
+          'modifiedDateTime': '2016-03-01T16:18:56',
+          'description': 'Correspondence',
+          'subDescription': 'Miscellaneous '
+        }
+      },
+      {
+        'id': 152,
         'createDateTime': '2012-01-25',
         'modifiedDateTime': '2016-03-01T16:18:56',
-        'description': 'Correspondence',
-        'subDescription': 'Miscellaneous '
+        'name': 'L143',
+        'description': 'VA 21-8358 Notice to Department of Veterans Affairs of Admission to Uniformed Services Hospital',
+        'isUserUploadable': true,
+        'is526': false,
+        'documentCategory': {
+          'id': 70,
+          'createDateTime': '2012-01-25',
+          'modifiedDateTime': '2016-03-01T16:18:56',
+          'description': 'Correspondence',
+          'subDescription': 'Miscellaneous '
+        }
       }
-    }] }.to_json
-  }
+    ] }.to_json
+  end
 
-  let(:alt_doc_types_body) {
+  let(:alt_doc_types_body) do
     { 'alternativeDocumentTypes': [
       {
         'id': 1,
@@ -102,9 +109,9 @@ describe ExternalApi::ClaimEvidenceService do
         'name': 'L4'
       }
     ] }.to_json
-  }
+  end
 
-  let(:raw_ocr_from_doc_body) {
+  let(:raw_ocr_from_doc_body) do
     {
       "currentVersion": {
         "file": {
@@ -118,28 +125,30 @@ describe ExternalApi::ClaimEvidenceService do
               },
               "pageNumber": 1,
               "text": 'Lorem ipsum',
-              "words": [{
-                "confidence": 0.0,
-                "geometry": {
-                  "height": 0.0,
-                  "left": 0.0,
-                  "top": 0.0,
-                  "width": 0.0
+              "words": [
+                {
+                  "confidence": 0.0,
+                  "geometry": {
+                    "height": 0.0,
+                    "left": 0.0,
+                    "top": 0.0,
+                    "width": 0.0
+                  },
+                  "pageNumber": 1,
+                  "text": 'Lorem'
                 },
-                "pageNumber": 1,
-                "text": 'Lorem'
-              },
-              {
-                "confidence": 0.0,
-                "geometry": {
-                  "height": 0.0,
-                  "left": 0.0,
-                  "top": 0.0,
-                  "width": 0.0
-                },
-                "pageNumber": 1,
-                "text": 'ipsum'
-              }]
+                {
+                  "confidence": 0.0,
+                  "geometry": {
+                    "height": 0.0,
+                    "left": 0.0,
+                    "top": 0.0,
+                    "width": 0.0
+                  },
+                  "pageNumber": 1,
+                  "text": 'ipsum'
+                }
+              ]
             }],
             "pageNumber": 1,
             "text": 'Lorem ipsum'
@@ -152,16 +161,16 @@ describe ExternalApi::ClaimEvidenceService do
         }
       }
     }.to_json
-  }
+  end
 
   upload_document_body = {
     body: {
-      "uuid": "a89ca2f5-76e8-4d10-826c-34d34b3e386e",
-      "currentVersionUuid": "bdbe50a5-62a8-4724-abe4-7048a61b3dee"
+      "uuid": 'a89ca2f5-76e8-4d10-826c-34d34b3e386e',
+      "currentVersionUuid": 'bdbe50a5-62a8-4724-abe4-7048a61b3dee'
     }
   }.to_json
 
-  let(:error_response_body) { { 'messages': { 'token': ["error"] } }.to_json }
+  let(:error_response_body) { { 'messages': { 'token': ['error'] } }.to_json }
 
   let(:success_doc_types_response) do
     HTTPI::Response.new(200, {}, doc_types_body)
@@ -373,7 +382,7 @@ describe ExternalApi::ClaimEvidenceService do
     end
 
     it 'filters key_phrases by score >= AWS_COMPREHEND_SCORE' do
-      expect(subject.filter_key_phrases_by_score(stub_response)).to eq(['Department',"APPEAL\n1A"])
+      expect(subject.filter_key_phrases_by_score(stub_response)).to eq(%W[Department APPEAL\n1A])
     end
 
     it 'retrieves key_phrases from CE API document' do
@@ -381,7 +390,7 @@ describe ExternalApi::ClaimEvidenceService do
       allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
       output = subject.get_key_phrases_from_document(doc_uuid, stub_response: true)
-      expect(output).to eq(['Department',"APPEAL\n1A"])
+      expect(output).to eq(%W[Department APPEAL\n1A])
     end
   end
 end

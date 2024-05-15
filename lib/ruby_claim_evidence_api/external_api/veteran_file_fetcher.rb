@@ -22,7 +22,7 @@ module ExternalApi
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
     end
-    
+
     def get_document_content(doc_series_id:)
       doc_series_id = parse_document_id(doc_series_id)
       response = api_client.send_ce_api_request(get_document_content_request(doc_series_id))
@@ -87,7 +87,7 @@ module ExternalApi
         "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
       }
     end
-    
+
     def get_document_content_request(doc_series_id)
       {
         headers: basic_header,
