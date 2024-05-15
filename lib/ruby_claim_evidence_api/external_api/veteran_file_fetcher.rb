@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require 'httpi'
-require 'ruby_claim_evidence_api'
+require 'ruby_claim_evidence_api/api_base'
 require 'ruby_claim_evidence_api/external_api/response'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
-  class VeteranFileFetcher < RubyClaimEvidenceApi
+  class VeteranFileFetcher < ApiBase
     def fetch_veteran_file_list(veteran_file_number:)
       initial_search = file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body)
       initial_results = initial_search.body
