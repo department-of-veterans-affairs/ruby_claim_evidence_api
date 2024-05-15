@@ -7,7 +7,7 @@ require 'ruby_claim_evidence_api/external_api/response'
 require 'ruby_claim_evidence_api/external_api/veteran_file_fetcher'
 
 describe ExternalApi::VeteranFileFetcher do
-  subject(:described) { described_class.new }
+  subject(:described) { described_class.new(use_canned_api_responses: false) }
 
   let(:mock_ce_service) { class_double('ExternalApi::ClaimEvidenceService').as_stubbed_const }
 

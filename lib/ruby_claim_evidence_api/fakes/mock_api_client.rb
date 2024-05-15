@@ -34,9 +34,14 @@ class MockApiClient
   end
 
   def files_folders_search_response
-    ExternalApi::Response.new(
-      HTTPI::Response.new(200, {}, { status: 'ok' })
+    json_obj = File.read(
+      File.join(
+        Gem::Specification.find_by_name('ruby_claim_evidence_api').gem_dir,
+        'spec/support/api_responses/file_folders_search_single_page.json'
+      )
     )
+
+    ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
   end
 
   def not_found_response
