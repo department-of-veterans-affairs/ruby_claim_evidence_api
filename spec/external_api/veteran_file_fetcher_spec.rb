@@ -71,4 +71,41 @@ describe ExternalApi::VeteranFileFetcher do
       end
     end
   end
+
+  describe '.fetch_veteran_file_list_by_date_range' do
+    context 'with a valid date range' do
+      it 'successfully calls the API' do
+        vet_file_number = '123456789'
+        begin_date_range = '2024-01-01'
+        end_date_range = '2024-05-01'
+
+        expect(mock_ce_service).to receive(:send_ce_api_request).once.with(
+          endpoint: '/folders/files:search',
+          query: {},
+          headers: { "Content-Type": 'application/json', "Accept": '*/*', "X-Folder-URI": "VETERAN:FILENUMBER:#{vet_file_number}" },
+          method: :post,
+          body: {
+            "pageRequest": {
+              "resultsPerPage": 20,
+              "page": 1
+            },
+            "filters": {
+              "systemData.uploadedDateTime" => {
+                "evaluationType" => "BETWEEN",
+                "value" => [begin_date_range, end_date_range]
+              }
+            }
+          }
+        ).and_return(file_folders_search_single_page)
+
+        response = described.fetch_veteran_file_list_by_date_range(
+          veteran_file_number: vet_file_number,
+          begin_date_range: begin_date_range,
+          end_date_range: end_date_range
+        )
+        expect(response.body['files'].length).to eq 1
+        expect(response.body['files'][0]['uuid']).to eq '33333333-3333-3333-3333-333333333333'
+      end
+    end
+  end
 end
