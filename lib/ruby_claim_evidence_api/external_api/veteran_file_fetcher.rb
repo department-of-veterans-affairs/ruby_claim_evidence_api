@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require 'httpi'
+require 'ruby_claim_evidence_api/api_base'
 require 'ruby_claim_evidence_api/external_api/response'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
-  class VeteranFileFetcher
+  class VeteranFileFetcher <  ApiBase
     def fetch_veteran_file_list(veteran_file_number:, filters: {})
       fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
     end
@@ -38,8 +39,10 @@ module ExternalApi
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
     end
 
+    private
+
     def file_folders_search(veteran_file_number:, query: {}, body: nil)
-      claim_evidence_service.send_ce_api_request(
+      api_client.send_ce_api_request(
         endpoint: '/folders/files:search',
         query: query,
         headers: x_folder_uri_header(veteran_file_number),
