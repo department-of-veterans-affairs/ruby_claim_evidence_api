@@ -6,7 +6,7 @@ require 'ruby_claim_evidence_api/external_api/response'
 
 module ExternalApi
   # Fetches CE API documents for a given veteran
-  class VeteranFileFetcher <  ApiBase
+  class VeteranFileFetcher < ApiBase
     def fetch_veteran_file_list(veteran_file_number:, filters: {})
       fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
     end
@@ -97,10 +97,6 @@ module ExternalApi
         "Accept": '*/*',
         "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
       }
-    end
-
-    def claim_evidence_service
-      ExternalApi::ClaimEvidenceService
     end
   end
 end
