@@ -20,6 +20,8 @@ describe MockApiClient do
 
       expect(response).to be_a ExternalApi::Response
       expect(response.code).to eq 200
+      expect(response.body).to have_key('page')
+      expect(response.body).to have_key('files')
     end
   end
 
