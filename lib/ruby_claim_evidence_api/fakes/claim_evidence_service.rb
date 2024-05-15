@@ -127,7 +127,7 @@ module Fakes
           ssl: {
             client_cert: client_cert,
             client_key: client_key,
-            verify: false
+            verify: Rails.env.production?
           }
         ) do |c|
           c.request :multipart
