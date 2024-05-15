@@ -71,6 +71,8 @@ describe ExternalApi::VeteranFileFetcher do
         expect(response.body['files'][0]['uuid']).to eq '11111111-1111-1111-1111-111111111111'
         expect(response.body['files'][1]['uuid']).to eq '22222222-2222-2222-2222-222222222222'
       end
+    end
+  end
 
   describe '.get_document_content' do
     it 'calls the ClaimEvidenceService and returns a byte string' do
