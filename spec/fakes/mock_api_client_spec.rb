@@ -13,6 +13,7 @@ describe MockApiClient do
 
       expect(response).to be_a ExternalApi::Response
       expect(response.code).to eq 200
+      expect(response.resp.body.encoding).to eq(Encoding::ASCII_8BIT)
     end
 
     it 'successfully calls the folders files search path' do

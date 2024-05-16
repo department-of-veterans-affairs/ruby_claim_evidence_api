@@ -28,8 +28,12 @@ class MockApiClient
   end
 
   def files_content_response
+    file_name = File.join(
+      Gem::Specification.find_by_name('ruby_claim_evidence_api').gem_dir,
+      'spec/support/get_document_content.pdf'
+    )
     ExternalApi::Response.new(
-      HTTPI::Response.new(200, {}, File.binread('spec/support/get_document_content.pdf'))
+      HTTPI::Response.new(200, {}, File.binread(file_name))
     )
   end
 
