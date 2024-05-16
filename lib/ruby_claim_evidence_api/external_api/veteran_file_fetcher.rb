@@ -24,6 +24,13 @@ module ExternalApi
       fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
     end
 
+    def get_document_content(doc_series_id:)
+      doc_series_id = parse_document_id(doc_series_id)
+      response = api_client.send_ce_api_request(get_document_content_request(doc_series_id))
+      # Returning this value as the api call returns a byte string and not a JSON body
+      response.resp.body
+    end
+
     private
 
     def fetch_paginated_documents(veteran_file_number:, filters: {})
@@ -41,15 +48,6 @@ module ExternalApi
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
     end
-
-    def get_document_content(doc_series_id:)
-      doc_series_id = parse_document_id(doc_series_id)
-      response = api_client.send_ce_api_request(get_document_content_request(doc_series_id))
-      # Returning this value as the api call returns a byte string and not a JSON body
-      response.resp.body
-    end
-
-    private
 
     def file_folders_search(veteran_file_number:, query: {}, body: nil)
       api_client.send_ce_api_request(
