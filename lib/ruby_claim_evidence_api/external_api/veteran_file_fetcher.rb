@@ -25,6 +25,7 @@ module ExternalApi
     end
 
     def get_document_content(doc_series_id:)
+      # Document ID may be wrapped in curly braces, we only need the string
       doc_series_id = parse_document_id(doc_series_id)
       response = api_client.send_ce_api_request(get_document_content_request(doc_series_id))
       # Returning this value as the api call returns a byte string and not a JSON body
