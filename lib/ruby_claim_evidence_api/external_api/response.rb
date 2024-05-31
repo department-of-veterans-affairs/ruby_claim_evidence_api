@@ -43,8 +43,8 @@ module ExternalApi
 
     # Error codes and their associated error
     ERROR_LOOKUP = {
-      401 => ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError,
-      403 => ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError,
+      401 => ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError,
+      403 => ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError,
       404 => ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError,
       429 => ClaimEvidenceApi::Error::ClaimEvidenceRateLimitError,
       500 => ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError,
