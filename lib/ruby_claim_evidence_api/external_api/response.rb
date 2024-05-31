@@ -48,6 +48,7 @@ module ExternalApi
       404 => ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError,
       429 => ClaimEvidenceApi::Error::ClaimEvidenceRateLimitError,
       500 => ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError,
+      501 => ClaimEvidenceApi::Error::ClaimEvidenceNotImplementedError,
       503 => ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
     }.freeze
 

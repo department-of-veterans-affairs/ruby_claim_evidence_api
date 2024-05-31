@@ -10,6 +10,6 @@ module ClaimEvidenceApi
     class ClaimEvidenceNotFoundError < ClaimEvidenceApiError; end
     class ClaimEvidenceInternalServerError < ClaimEvidenceApiError; end
     class ClaimEvidenceRateLimitError < ClaimEvidenceApiError; end
-
+    class ClaimEvidenceNotImplementedError < ClaimEvidenceApiError; end
   end
 end
