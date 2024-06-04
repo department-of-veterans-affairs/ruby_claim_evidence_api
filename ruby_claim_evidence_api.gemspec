@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'faraday'
   s.add_runtime_dependency 'faraday-multipart'
   s.add_runtime_dependency 'railties'
-  s.add_runtime_dependency 'webmock', '~> 3.6.2'
+  s.add_runtime_dependency 'webmock', '~> 3.11.0'
 
   s.files = Dir['lib/**/*.rb']
   s.require_paths = ['lib']
