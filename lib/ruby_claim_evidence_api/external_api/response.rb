@@ -68,7 +68,7 @@ module ExternalApi
 
     # Gets the error message from the response
     def error_message
-      return 'No error message from ClaimEvidence' if body.empty?
+      return 'No error message from ClaimEvidence' if body.nil? || body.empty?
 
       if @uses_net_http == true
         body['message']
