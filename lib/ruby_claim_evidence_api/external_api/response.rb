@@ -39,6 +39,13 @@ module ExternalApi
       end
     end
 
+    def to_json(_)
+      {
+        error: error_message,
+        body: body
+      }
+    end
+
     private
 
     # Error codes and their associated error
