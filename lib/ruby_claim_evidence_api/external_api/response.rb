@@ -39,6 +39,13 @@ module ExternalApi
       end
     end
 
+    def to_json(_)
+      {
+        error: error_message,
+        body: body
+      }
+    end
+
     private
 
     # Error codes and their associated error
@@ -73,7 +80,7 @@ module ExternalApi
       if @uses_net_http == true
         body['message']
       else
-        body['messages'] || body['errors'][0]['message']
+        body['message'] || body['messages'] || body['errors'][0]['message']
       end
     end
   end

@@ -42,9 +42,7 @@ module ExternalApi
       total_pages = initial_results['page']['totalPages'].to_i
       current_page = initial_results['page']['currentPage'].to_i
 
-      if total_result == 0 || current_page == total_pages
-        return initial_search
-      end
+      return initial_search if total_result.zero? || current_page == total_pages
 
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
@@ -79,8 +77,13 @@ module ExternalApi
 
     def build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
       response_files = []
+
       responses.each do |response|
-        response_files.concat(response.body['files'])
+        if !response.body.nil? && !response.body.empty? && response.body.key?('files')
+          response_files.concat(response.body['files'])
+        else
+          logger.error(response.to_json)
+        end
       end
 
       final_response = { 'page': initial_results['page'], 'files': response_files }.to_json
