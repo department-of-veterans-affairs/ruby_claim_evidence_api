@@ -85,7 +85,8 @@ module ExternalApi
           body['message'] || body['messages'] || body['errors'][0]['message']
         end
       rescue StandardError => e
-        "Encountered #{e} while attempting to access response body: #{body}"
+        logger.error "Error accessing response body: #{body}"
+        "Encountered #{e} while attempting to access response body"
       end
     end
   end
