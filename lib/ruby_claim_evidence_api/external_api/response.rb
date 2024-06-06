@@ -80,7 +80,7 @@ module ExternalApi
       if @uses_net_http == true
         body['message']
       else
-        body['messages'] || body['errors'][0]['message']
+        body['message'] || body['messages'] || body['errors'][0]['message']
       end
     end
   end
