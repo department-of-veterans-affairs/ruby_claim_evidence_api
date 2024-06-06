@@ -81,6 +81,7 @@ module ExternalApi
         if @uses_net_http == true
           body['message']
         else
+          # Possible error response shapes taken from Claim Evidence Swagger
           body['message'] || body['messages'] || body['errors'][0]['message']
         end
       rescue StandardError => e
