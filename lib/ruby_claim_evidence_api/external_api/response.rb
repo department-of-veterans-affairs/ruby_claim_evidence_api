@@ -77,10 +77,15 @@ module ExternalApi
     def error_message
       return 'No error message from ClaimEvidence' if body.nil? || body.empty?
 
-      if @uses_net_http == true
-        body['message']
-      else
-        body['message'] || body['messages'] || body['errors'][0]['message']
+      begin
+        if @uses_net_http == true
+          body['message']
+        else
+          body['message'] || body['messages'] || body['errors'][0]['message']
+        end
+      rescue StandardError => e
+        logger.error "Encountered #{e} while attempting to access response body: #{body}"
+        {}
       end
     end
   end
