@@ -2,7 +2,7 @@
 
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
-require 'aws-sdk-comprehend'
+require 'aws-sdk'
 require './spec/external_api/spec_helper'
 require 'webmock/rspec'
 

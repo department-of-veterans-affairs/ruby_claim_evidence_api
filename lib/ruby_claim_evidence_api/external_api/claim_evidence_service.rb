@@ -4,7 +4,7 @@ require 'pry'
 require 'httpi'
 require 'active_support/all'
 require 'ruby_claim_evidence_api/external_api/response'
-require 'aws-sdk-comprehend'
+require 'aws-sdk'
 require 'base64'
 
 module ExternalApi

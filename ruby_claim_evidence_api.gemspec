@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.authors = 'Caseflow'
   s.email   = 'vacaseflowops@va.gov'
 
+  s.add_development_dependency 'aws-sdk', '~> 2.10'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'rspec'
 
@@ -15,7 +16,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'httpi'
 
   s.add_runtime_dependency 'activesupport'
-  s.add_runtime_dependency 'aws-sdk-comprehend', '~> 1.77'
   s.add_runtime_dependency 'faraday'
   s.add_runtime_dependency 'faraday-multipart'
   s.add_runtime_dependency 'railties'
