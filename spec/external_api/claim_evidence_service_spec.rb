@@ -2,7 +2,7 @@
 
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
-require 'aws-sdk'
+require 'aws-sdk-comprehend'
 require './spec/external_api/spec_helper'
 require 'webmock/rspec'
 
@@ -314,7 +314,7 @@ describe ExternalApi::ClaimEvidenceService do
           headers: {
             'Accept' => '*/*',
             'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-            'User-Agent' => 'aws-sdk-ruby2/2.11.632',
+            'User-Agent' => 'aws-sdk-ruby2/3.2.0',
             'X-Aws-Ec2-Metadata-Token-Ttl-Seconds' => '21600'
           }
         ).to_return(status: 200, body: '', headers: {})
@@ -324,7 +324,7 @@ describe ExternalApi::ClaimEvidenceService do
           headers: {
             'Accept' => '*/*',
             'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-            'User-Agent' => 'aws-sdk-ruby2/2.11.632'
+            'User-Agent' => 'aws-sdk-ruby2/3.2.0'
           }
         ).to_return(status: 200, body: '', headers: {})
     end
