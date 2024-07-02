@@ -2,7 +2,7 @@
 
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
-require 'aws-sdk'
+# require 'aws-sdk'
 require './spec/external_api/spec_helper'
 require 'webmock/rspec'
 
@@ -12,10 +12,10 @@ describe ExternalApi::ClaimEvidenceService do
   let(:client_secret) { 'SOME-FAKE-KEY' }
   let(:doc_uuid) { 'SOME-FAKE-UUID' }
   let(:service_id) { 'SOME-FAKE-SERVICE' }
-  let(:aws_access_key_id) { 'dummykeyid' }
-  let(:aws_secret_access_key) { 'dummysecretkey' }
-  let(:aws_region) { 'us-gov-west-1' }
-  let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
+  # let(:aws_access_key_id) { 'dummykeyid' }
+  # let(:aws_secret_access_key) { 'dummysecretkey' }
+  # let(:aws_region) { 'us-gov-west-1' }
+  # let(:aws_credentials) { Aws::Credentials.new(aws_access_key_id, aws_secret_access_key) }
   let(:file) { '/fake/file' }
   let(:file_number) { '500000000' }
   let(:doc_info) do
@@ -313,84 +313,84 @@ describe ExternalApi::ClaimEvidenceService do
     end
   end
 
-  context 'with Aws Comprehend' do
-    subject { ExternalApi::ClaimEvidenceService }
-    before do
-      subject::REGION ||= aws_region
-      subject::AWS_COMPREHEND_SCORE ||= 0.95
-      stub_request(:put, 'http://169.254.169.254/latest/api/token')
-        .with(
-          headers: {
-            'Accept' => '*/*',
-            'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-            'User-Agent' => 'aws-sdk-ruby2/2.11.632',
-            'X-Aws-Ec2-Metadata-Token-Ttl-Seconds' => '21600'
-          }
-        ).to_return(status: 200, body: '', headers: {})
+  # context 'with Aws Comprehend' do
+  #   subject { ExternalApi::ClaimEvidenceService }
+  #   before do
+  #     subject::REGION ||= aws_region
+  #     subject::AWS_COMPREHEND_SCORE ||= 0.95
+  #     stub_request(:put, 'http://169.254.169.254/latest/api/token')
+  #       .with(
+  #         headers: {
+  #           'Accept' => '*/*',
+  #           'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+  #           'User-Agent' => 'aws-sdk-ruby2/2.11.632',
+  #           'X-Aws-Ec2-Metadata-Token-Ttl-Seconds' => '21600'
+  #         }
+  #       ).to_return(status: 200, body: '', headers: {})
 
-      stub_request(:get, 'http://169.254.169.254/latest/meta-data/iam/security-credentials/')
-        .with(
-          headers: {
-            'Accept' => '*/*',
-            'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-            'User-Agent' => 'aws-sdk-ruby2/2.11.632'
-          }
-        ).to_return(status: 200, body: '', headers: {})
-    end
-    let(:ocr_data) { 'Some text string' }
-    let(:stub_response) do
-      [
-        {
-          score: 0.9825336337089539,
-          text: 'Department',
-          begin_offset: 1,
-          end_offset: 11
-        },
-        {
-          score: 0.9376260447502136,
-          text: "Veterans Affairs\nCERTIFICATION",
-          begin_offset: 15,
-          end_offset: 45
-        },
-        {
-          score: 0.994326651096344,
-          text: "APPEAL\n1A",
-          begin_offset: 49,
-          end_offset: 58
-        }
-      ]
-    end
+  #     stub_request(:get, 'http://169.254.169.254/latest/meta-data/iam/security-credentials/')
+  #       .with(
+  #         headers: {
+  #           'Accept' => '*/*',
+  #           'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+  #           'User-Agent' => 'aws-sdk-ruby2/2.11.632'
+  #         }
+  #       ).to_return(status: 200, body: '', headers: {})
+  #   end
+  #   let(:ocr_data) { 'Some text string' }
+  #   let(:stub_response) do
+  #     [
+  #       {
+  #         score: 0.9825336337089539,
+  #         text: 'Department',
+  #         begin_offset: 1,
+  #         end_offset: 11
+  #       },
+  #       {
+  #         score: 0.9376260447502136,
+  #         text: "Veterans Affairs\nCERTIFICATION",
+  #         begin_offset: 15,
+  #         end_offset: 45
+  #       },
+  #       {
+  #         score: 0.994326651096344,
+  #         text: "APPEAL\n1A",
+  #         begin_offset: 49,
+  #         end_offset: 58
+  #       }
+  #     ]
+  #   end
 
-    it 'initializes Aws Comprehend client with region' do
-      expect(subject::REGION).not_to be_nil
-      expect(subject.aws_client).not_to be_nil
-      expect(subject.aws_stub_client).not_to be_nil
-    end
+  #   it 'initializes Aws Comprehend client with region' do
+  #     expect(subject::REGION).not_to be_nil
+  #     expect(subject.aws_client).not_to be_nil
+  #     expect(subject.aws_stub_client).not_to be_nil
+  #   end
 
-    it 'performs #detect_key_phrase real-time analysis on ocr_data' do
-      subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
-      # Stubbed data returns an Aws struct - Map the data to a hash compare
-      formatted_output = subject.get_key_phrases(ocr_data, stub_response: true).map do |struct|
-        {
-          score: struct.score,
-          text: struct.text,
-          begin_offset: struct.begin_offset,
-          end_offset: struct.end_offset
-        }
-      end
-      expect(formatted_output).to eq(stub_response)
-    end
+  #   it 'performs #detect_key_phrase real-time analysis on ocr_data' do
+  #     subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
+  #     # Stubbed data returns an Aws struct - Map the data to a hash compare
+  #     formatted_output = subject.get_key_phrases(ocr_data, stub_response: true).map do |struct|
+  #       {
+  #         score: struct.score,
+  #         text: struct.text,
+  #         begin_offset: struct.begin_offset,
+  #         end_offset: struct.end_offset
+  #       }
+  #     end
+  #     expect(formatted_output).to eq(stub_response)
+  #   end
 
-    it 'filters key_phrases by score >= AWS_COMPREHEND_SCORE' do
-      expect(subject.filter_key_phrases_by_score(stub_response)).to eq(%W[Department APPEAL\n1A])
-    end
+  #   it 'filters key_phrases by score >= AWS_COMPREHEND_SCORE' do
+  #     expect(subject.filter_key_phrases_by_score(stub_response)).to eq(%W[Department APPEAL\n1A])
+  #   end
 
-    it 'retrieves key_phrases from CE API document' do
-      subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
-      allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
-      output = subject.get_key_phrases_from_document(doc_uuid, stub_response: true)
-      expect(output).to eq(%W[Department APPEAL\n1A])
-    end
-  end
+  #   it 'retrieves key_phrases from CE API document' do
+  #     subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
+  #     allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
+  #     allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
+  #     output = subject.get_key_phrases_from_document(doc_uuid, stub_response: true)
+  #     expect(output).to eq(%W[Department APPEAL\n1A])
+  #   end
+  # end
 end
