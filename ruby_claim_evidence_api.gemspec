@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec'
 
   s.add_dependency 'base64'
-  s.add_dependency 'httpi', '3.0.0'
+  s.add_dependency 'httpi'
   s.add_dependency 'rack', '< 3'
 
   s.add_runtime_dependency 'activesupport'
