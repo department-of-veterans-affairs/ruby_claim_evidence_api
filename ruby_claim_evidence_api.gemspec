@@ -7,13 +7,15 @@ Gem::Specification.new do |s|
 
   s.authors = 'Caseflow'
   s.email   = 'vacaseflowops@va.gov'
+  s.required_ruby_version = '~> 2.7'
 
-  s.add_development_dependency 'aws-sdk', '~> 2.10'
+  # s.add_development_dependency 'aws-sdk', '~> 2.10'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'rspec'
 
   s.add_dependency 'base64'
   s.add_dependency 'httpi'
+  s.add_dependency 'rack', '< 3'
 
   s.add_runtime_dependency 'activesupport'
   s.add_runtime_dependency 'faraday'

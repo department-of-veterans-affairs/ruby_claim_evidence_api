@@ -3,7 +3,7 @@
 require 'ruby_claim_evidence_api/external_api/response'
 require 'faraday'
 require 'faraday/multipart'
-require 'aws-sdk'
+# require 'aws-sdk'
 module Fakes
   # Mock ClaimEvidenceService. Returns CE API responses when connected to DEV_VPN proxy, and hard-coded responses when not
   class ClaimEvidenceService
@@ -20,12 +20,6 @@ module Fakes
       "Content-Type": 'application/json',
       "Accept": '*/*'
     }.freeze
-    CREDENTIALS = Aws::Credentials.new(
-      ENV['AWS_ACCESS_KEY_ID'],
-      ENV['AWS_SECRET_ACCESS_KEY']
-    )
-    REGION = ENV['AWS_DEFAULT_REGION']
-    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     class << self
       def document_types_request
@@ -162,44 +156,51 @@ module Fakes
       end
       # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
-      def aws_client
-        @aws_client ||= Aws::Comprehend::Client.new(
-          region: REGION,
-          credentials: CREDENTIALS
-        )
-      end
+      # CREDENTIALS = Aws::Credentials.new(
+      #   ENV['AWS_ACCESS_KEY_ID'],
+      #   ENV['AWS_SECRET_ACCESS_KEY']
+      # )
+      # REGION = ENV['AWS_DEFAULT_REGION']
+      # AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
-      def aws_stub_client
-        @aws_stub_client ||= Aws::Comprehend::Client.new(
-          region: REGION,
-          credentials: CREDENTIALS,
-          stub_responses: true
-        )
-      end
+      # def aws_client
+      #   @aws_client ||= Aws::Comprehend::Client.new(
+      #     region: REGION,
+      #     credentials: CREDENTIALS
+      #   )
+      # end
 
-      def get_key_phrases(ocr_data, stub_response: false)
-        key_phrase_parameters = {
-          text: ocr_data,
-          language_code: 'en'
-        }
-        if stub_response == true
-          aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
-        else
-          aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
-        end
-      end
+      # def aws_stub_client
+      #   @aws_stub_client ||= Aws::Comprehend::Client.new(
+      #     region: REGION,
+      #     credentials: CREDENTIALS,
+      #     stub_responses: true
+      #   )
+      # end
 
-      def filter_key_phrases_by_score(key_phrases)
-        key_phrases.filter_map do |key_phrase|
-          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE
-        end
-      end
+      # def get_key_phrases(ocr_data, stub_response: false)
+      #   key_phrase_parameters = {
+      #     text: ocr_data,
+      #     language_code: 'en'
+      #   }
+      #   if stub_response == true
+      #     aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
+      #   else
+      #     aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
+      #   end
+      # end
 
-      def get_key_phrases_from_document(doc_uuid, stub_response: false)
-        ocr_data = get_ocr_document(doc_uuid)
-        key_phrases = get_key_phrases(ocr_data, stub_response)
-        filter_key_phrases_by_score(key_phrases)
-      end
+      # def filter_key_phrases_by_score(key_phrases)
+      #   key_phrases.filter_map do |key_phrase|
+      #     key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE
+      #   end
+      # end
+
+      # def get_key_phrases_from_document(doc_uuid, stub_response: false)
+      #   ocr_data = get_ocr_document(doc_uuid)
+      #   key_phrases = get_key_phrases(ocr_data, stub_response)
+      #   filter_key_phrases_by_score(key_phrases)
+      # end
 
       private
 

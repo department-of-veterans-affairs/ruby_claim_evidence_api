@@ -4,7 +4,7 @@ require 'pry'
 require 'httpi'
 require 'active_support/all'
 require 'ruby_claim_evidence_api/external_api/response'
-require 'aws-sdk'
+# require 'aws-sdk'
 require 'base64'
 
 module ExternalApi
@@ -26,8 +26,6 @@ module ExternalApi
       "Content-Type": 'application/json',
       "Accept": '*/*'
     }.freeze
-    REGION = ENV['AWS_REGION']
-    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
     FILES_CONTENT_PATH = '/files/:uuid/content'
     FOLDERS_FILES_SEARCH_PATH = '/folders/files:search'
@@ -164,45 +162,49 @@ module ExternalApi
       end
       # rubocop:enable Metrics/PerceivedComplexity, Metrics/AbcSize, Metrics/CyclomaticComplexity
 
-      def aws_client
-        @aws_client ||= Aws::Comprehend::Client.new(
-          region: REGION
-        )
-      end
 
-      def aws_stub_client
-        @aws_stub_client ||= Aws::Comprehend::Client.new(
-          region: REGION,
-          stub_responses: true
-        )
-      end
+      # REGION = ENV['AWS_REGION']
+      # AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
-      def get_key_phrases(ocr_data, stub_response: false)
-        key_phrase_parameters = {
-          text: ocr_data,
-          language_code: 'en'
-        }
-        if stub_response == true
-          aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
-        else
-          aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
-        end
-      end
+      # def aws_client
+      #   @aws_client ||= Aws::Comprehend::Client.new(
+      #     region: REGION
+      #   )
+      # end
 
-      def filter_key_phrases_by_score(key_phrases)
-        key_phrases.filter_map do |key_phrase|
-          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE.to_f
-        end
-      end
+      # def aws_stub_client
+      #   @aws_stub_client ||= Aws::Comprehend::Client.new(
+      #     region: REGION,
+      #     stub_responses: true
+      #   )
+      # end
 
-      def get_key_phrases_from_document(doc_uuid, stub_response: false)
-        ocr_data = get_ocr_document(doc_uuid)
+      # def get_key_phrases(ocr_data, stub_response: false)
+      #   key_phrase_parameters = {
+      #     text: ocr_data,
+      #     language_code: 'en'
+      #   }
+      #   if stub_response == true
+      #     aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
+      #   else
+      #     aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
+      #   end
+      # end
 
-        return unless ocr_data.present?
+      # def filter_key_phrases_by_score(key_phrases)
+      #   key_phrases.filter_map do |key_phrase|
+      #     key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE.to_f
+      #   end
+      # end
 
-        key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
-        filter_key_phrases_by_score(key_phrases)
-      end
+      # def get_key_phrases_from_document(doc_uuid, stub_response: false)
+      #   ocr_data = get_ocr_document(doc_uuid)
+
+      #   return unless ocr_data.present?
+
+      #   key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
+      #   filter_key_phrases_by_score(key_phrases)
+      # end
 
       private
 
