@@ -55,7 +55,7 @@ module ExternalApi
         )
 
         jwt_token = generate_jwt_token
-        request['Authorization'] = jwt_token
+        request['Authorization'] = "Bearer #{jwt_token}"
         request['X-Folder-URI'] = "VETERAN:FILENUMBER:#{vet_file_number}"
 
         request
