@@ -25,4 +25,12 @@ class ApiBase
 
     @api_client
   end
+
+  def x_folder_uri_header(veteran_file_number)
+    {
+      "Content-Type": 'application/json',
+      "Accept": '*/*',
+      "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
+    }
+  end
 end
