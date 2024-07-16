@@ -4,7 +4,7 @@ require 'ruby_claim_evidence_api/api_base'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
 require 'ruby_claim_evidence_api/external_api/response'
 require 'ruby_claim_evidence_api/external_api/veteran_file_updater'
-require 'ruby_claim_evidence_api/models/file_update_request'
+require 'ruby_claim_evidence_api/models/file_update_payload'
 require './spec/external_api/spec_helper'
 
 describe ExternalApi::VeteranFileUpdater do
@@ -36,12 +36,12 @@ describe ExternalApi::VeteranFileUpdater do
           }
         ).and_return(mock_api_response)
 
-      file_update_request = FileUpdateRequest.new
+      file_update_payload = FileUpdatePayload.new
 
       described.update_veteran_file(
         veteran_file_number: '123456789',
         file_uuid: '0003E65D-0000-C118-A964-CA1AEC2925E6',
-        file_update_request: file_update_request
+        file_update_payload: file_update_payload
       )
     end
   end

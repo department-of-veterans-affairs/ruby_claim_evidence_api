@@ -5,11 +5,11 @@ require 'ruby_claim_evidence_api/api_base'
 module ExternalApi
   # Updates documents in the CE API documents for a given veteran
   class VeteranFileUpdater < ApiBase
-    def update_veteran_file(veteran_file_number:, file_uuid:, file_update_request:)
+    def update_veteran_file(veteran_file_number:, file_uuid:, file_update_payload:)
       post_files_uuid(
         veteran_file_number: veteran_file_number,
         file_uuid: file_uuid,
-        body: post_files_uuid_body(file_update_request)
+        body: post_files_uuid_body(file_update_payload)
       )
     end
 
@@ -25,16 +25,16 @@ module ExternalApi
       )
     end
 
-    def post_files_uuid_body(file_update_request)
+    def post_files_uuid_body(file_update_payload)
       {
         payload: {
           providerData: {
-            contentSource: file_update_request.file_content_source,
-            documentTypeId: file_update_request.document_type_id,
-            dateVaReceivedDocument: file_update_request.date_va_received_document
+            contentSource: file_update_payload.file_content_source,
+            documentTypeId: file_update_payload.document_type_id,
+            dateVaReceivedDocument: file_update_payload.date_va_received_document
           }
         },
-        file: file_update_request.file_content
+        file: file_update_payload.file_content
       }
     end
   end
