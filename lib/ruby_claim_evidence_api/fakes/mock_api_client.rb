@@ -18,8 +18,10 @@ class MockApiClient
     endpoint = args[0][:endpoint]
 
     case endpoint
-    when %r{/files/[\w\d-]+/content}
+    when %r{\/files\/[\w\d-]+\/content}
       files_content_response
+    when %r{\/files\/[\w\d-]+}
+      update_veteran_file_response
     when ExternalApi::ClaimEvidenceService::FOLDERS_FILES_SEARCH_PATH
       files_folders_search_response
     else
@@ -42,6 +44,17 @@ class MockApiClient
       File.join(
         Gem::Specification.find_by_name('ruby_claim_evidence_api').gem_dir,
         'spec/support/api_responses/file_folders_search_single_page.json'
+      )
+    )
+
+    ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
+  end
+
+  def update_veteran_file_response
+    json_obj = File.read(
+      File.join(
+        Gem::Specification.find_by_name('ruby_claim_evidence_api').gem_dir,
+        'spec/support/api_responses/update_veteran_file_response.json'
       )
     )
 
