@@ -16,6 +16,15 @@ describe MockApiClient do
       expect(response.resp.body.encoding).to eq(Encoding::ASCII_8BIT)
     end
 
+    it 'successfully calls the update veteran file path' do
+      response = described.send_ce_api_request(endpoint: '/files/0003E65D-0000-C118-A964-CA1AEC2925E6')
+
+      expect(response).to be_a ExternalApi::Response
+      expect(response.code).to eq 200
+      expect(response.body).to have_key('conversionInformation')
+      expect(response.body).to have_key('currentVersionUuid')
+    end
+
     it 'successfully calls the folders files search path' do
       response = described.send_ce_api_request(endpoint: '/folders/files:search')
 
