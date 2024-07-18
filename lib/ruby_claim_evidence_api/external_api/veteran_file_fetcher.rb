@@ -35,7 +35,7 @@ module ExternalApi
     private
 
     def fetch_paginated_documents(veteran_file_number:, filters: {})
-      initial_search = file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body(filters: filters))
+      initial_search = post_file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body(filters: filters))
       initial_results = initial_search.body
 
       total_result = initial_results['page']['totalResults'].to_i
@@ -48,7 +48,7 @@ module ExternalApi
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
     end
 
-    def file_folders_search(veteran_file_number:, query: {}, body: nil)
+    def post_file_folders_search(veteran_file_number:, query: {}, body: nil)
       api_client.send_ce_api_request(
         endpoint: '/folders/files:search',
         query: query,
@@ -64,7 +64,7 @@ module ExternalApi
       until current_page == total_pages
         current_page += 1
 
-        current_search = file_folders_search(
+        current_search = post_file_folders_search(
           veteran_file_number: veteran_file_number,
           body: file_folders_search_body(page: current_page)
         )
@@ -100,14 +100,6 @@ module ExternalApi
           "page": page
         },
         "filters": filters
-      }
-    end
-
-    def x_folder_uri_header(veteran_file_number)
-      {
-        "Content-Type": 'application/json',
-        "Accept": '*/*',
-        "X-Folder-URI": "VETERAN:FILENUMBER:#{veteran_file_number}"
       }
     end
 
