@@ -36,7 +36,7 @@ describe ExternalApi::VeteranFileUpdater do
           }
         ).and_return(mock_api_response)
 
-      file_update_payload = FileUpdatePayload.new
+      file_update_payload = ClaimEvidenceFileUpdatePayload.new
 
       described.update_veteran_file(
         veteran_file_number: '123456789',
