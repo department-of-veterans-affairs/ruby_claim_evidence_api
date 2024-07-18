@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Encapsulates all of the data required to perform a file update in the CE API
-class FileUpdatePayload
+class ClaimEvidenceFileUpdatePayload
   attr_accessor :date_va_received_document,
                 :document_type_id,
                 :file_content,
