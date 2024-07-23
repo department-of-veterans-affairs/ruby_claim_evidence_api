@@ -61,6 +61,25 @@ module ExternalApi
         request
       end
 
+      def update_document_request(veteran_file_number:, file_uuid:, file_update_payload:)
+        request = set_upload_document_form_data_for_request(
+          request: Net::HTTP::Post.new(file_update_uri(file_uuid)),
+          payload: {
+            providerData: {
+              contentSource: file_update_payload.file_content_source,
+              documentTypeId: file_update_payload.document_type_id,
+              dateVaReceivedDocument: file_update_payload.date_va_received_document
+            }
+          },
+          file_path: file_update_payload.file_content_path
+        )
+
+        request['Authorization'] = "Bearer #{generate_jwt_token}"
+        request['X-Folder-URI'] = "VETERAN:FILENUMBER:#{veteran_file_number}"
+
+        request
+      end
+
       def document_types
         send_ce_api_request(document_types_request).body['documentTypes']
       end
@@ -75,6 +94,16 @@ module ExternalApi
 
       def upload_document(file, vet_file_number, doc_info)
         send_multipart_post_request(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      def update_document(veteran_file_number:, file_uuid:, file_update_payload:)
+        send_multipart_post_request(
+          update_document_request(
+            veteran_file_number: veteran_file_number,
+            file_uuid: file_uuid,
+            file_update_payload: file_update_payload
+          )
+        ).body
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
@@ -229,6 +258,10 @@ module ExternalApi
 
       def file_upload_uri
         @file_upload_uri = URI("#{BASE_URL}#{SERVER}/files")
+      end
+
+      def file_update_uri(file_uuid)
+        @file_update_uri = URI("#{BASE_URL}#{SERVER}/files/#{file_uuid}")
       end
 
       def generate_jwt_token
