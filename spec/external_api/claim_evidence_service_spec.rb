@@ -2,6 +2,7 @@
 
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
+require 'ruby_claim_evidence_api/models/claim_evidence_file_update_payload'
 # require 'aws-sdk'
 require './spec/external_api/spec_helper'
 require 'webmock/rspec'
@@ -253,7 +254,7 @@ describe ExternalApi::ClaimEvidenceService do
             headers: {
               'Accept' => '*/*',
               'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-              'Authorization' => 'fake.jwt.token',
+              'Authorization' => 'Bearer fake.jwt.token',
               'Content-Type' => 'multipart/form-data',
               'Host' => 'fake.api.claimevidence.comapi',
               'User-Agent' => 'Ruby',
@@ -264,6 +265,20 @@ describe ExternalApi::ClaimEvidenceService do
 
       it 'uploads document' do
         ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
+        expect(WebMock).to have_requested(:post, url)
+      end
+
+      it 'updates document' do
+        ExternalApi::ClaimEvidenceService.update_document(
+          veteran_file_number: file_number,
+          file_uuid: "123456789",
+          file_update_payload: ClaimEvidenceFileUpdatePayload.new(
+            date_va_received_document: Time.zone.now,
+            document_type_id: uploadable_document.document_type_id,
+            file_content_path: uploadable_document.pdf_location,
+            file_content_source: uploadable_document.source
+          )
+        )
         expect(WebMock).to have_requested(:post, url)
       end
     end
