@@ -20,6 +20,8 @@ class MockApiClient
       response = files_content_response
     when /\/files\/[\w\d-]+/
       response = update_veteran_file_response
+    when /\/files/
+      response = upload_veteran_file_response
     when ExternalApi::ClaimEvidenceService::FOLDERS_FILES_SEARCH_PATH
       response = files_folders_search_response
     end
@@ -55,6 +57,17 @@ class MockApiClient
       )
     )
 
+    ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
+  end
+
+  def upload_veteran_file_response
+    # update and upload have same responses
+    json_obj = File.read(
+      File.join(
+        Gem::Specification.find_by_name('ruby_claim_evidence_api').gem_dir,
+        'spec/support/api_responses/update_veteran_file_response.json'
+      )
+    )
     ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
   end
 
