@@ -68,7 +68,8 @@ module ExternalApi
             providerData: {
               contentSource: file_update_payload.file_content_source,
               documentTypeId: file_update_payload.document_type_id,
-              dateVaReceivedDocument: file_update_payload.date_va_received_document
+              dateVaReceivedDocument: file_update_payload.date_va_received_document,
+              subject: file_update_payload.subject
             }
           },
           file_path: file_update_payload.file_content_path

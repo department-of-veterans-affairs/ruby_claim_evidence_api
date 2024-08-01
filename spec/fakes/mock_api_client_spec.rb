@@ -25,6 +25,15 @@ describe MockApiClient do
       expect(response.body).to have_key('currentVersionUuid')
     end
 
+    it 'successfully calls the upload veteran file path' do
+      response = described.send_ce_api_request(endpoint: '/files')
+
+      expect(response).to be_a ExternalApi::Response
+      expect(response.code).to eq 200
+      expect(response.body).to have_key('uuid')
+      expect(response.body).to have_key('currentVersionUuid')
+    end
+
     it 'successfully calls the folders files search path' do
       response = described.send_ce_api_request(endpoint: '/folders/files:search')
 
