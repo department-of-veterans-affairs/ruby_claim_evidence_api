@@ -11,7 +11,10 @@ module ExternalApi
     include StringParser
 
     def fetch_veteran_file_list(veteran_file_number:, filters: {})
-      fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
+      fetch_paginated_documents(
+        veteran_file_number: veteran_file_number,
+        filters: filters
+      ).body
     end
 
     def fetch_veteran_file_list_by_date_range(veteran_file_number:, begin_date_range:, end_date_range:)
@@ -21,7 +24,10 @@ module ExternalApi
           'value' => [begin_date_range, end_date_range]
         }
       }
-      fetch_paginated_documents(veteran_file_number: veteran_file_number, filters: filters)
+      fetch_paginated_documents(
+        veteran_file_number: veteran_file_number,
+        filters: filters
+      ).body
     end
 
     def get_document_content(doc_series_id:)
