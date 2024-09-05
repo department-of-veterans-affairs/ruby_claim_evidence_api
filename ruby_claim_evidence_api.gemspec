@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
   # s.add_development_dependency 'aws-sdk', '~> 2.10'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'rspec'
+  s.add_development_dependency 'mime-types'
 
   s.add_dependency 'base64'
   s.add_dependency 'httpi'
