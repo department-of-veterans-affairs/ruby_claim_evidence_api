@@ -3,6 +3,7 @@
 require 'ruby_claim_evidence_api/external_api/response'
 require 'faraday'
 require 'faraday/multipart'
+require 'mime/types'
 # require 'aws-sdk'
 module Fakes
   # Mock ClaimEvidenceService. Returns CE API responses when connected to DEV_VPN proxy, and hard-coded responses when not

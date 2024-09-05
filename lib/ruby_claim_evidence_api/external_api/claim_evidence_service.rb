@@ -6,6 +6,7 @@ require 'active_support/all'
 require 'ruby_claim_evidence_api/external_api/response'
 # require 'aws-sdk'
 require 'base64'
+require 'mime/types'
 
 module ExternalApi
   # Establishes connection between Claims Evidence API, AWS, and Caseflow
