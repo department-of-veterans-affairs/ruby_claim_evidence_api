@@ -42,7 +42,7 @@ module Fakes
       def upload_document_request(file, vet_file_number, doc_info)
         body = {}
         body[:file] = Faraday::Multipart::FilePart.new(file, MIME::Types.type_for(file).first.to_s)
-        body[:payload] = Faraday::Multipart::ParamPart.new(doc_info, 'application/json')
+        body[:payload] = Faraday::Multipart::ParamPart.new(doc_info.to_json, 'application/json')
         {
           headers: HEADERS.merge(
             "Content-Type": 'multipart/form-data',
