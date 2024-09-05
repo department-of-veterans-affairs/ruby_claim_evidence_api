@@ -250,8 +250,13 @@ module ExternalApi
 
       def set_upload_document_form_data_for_request(request:, payload:, file_path:)
         file_content = File.binread(file_path)
+        mime_type = MIME::Types.type_for(file_path).first.to_s
         form_data = []
-        form_data << ['file', file_content, { filename: File.basename(file_path), content_type: 'application/pdf' }]
+        form_data << [
+          'file',
+          file_content,
+          { filename: File.basename(file_path), content_type: mime_type }
+        ]
         form_data << ['payload', payload.to_json]
         request.set_form form_data, 'multipart/form-data'
         request
