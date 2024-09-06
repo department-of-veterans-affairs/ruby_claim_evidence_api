@@ -205,16 +205,17 @@ module Fakes
       private
 
       def handle_faraday_responses(conn:, method:, endpoint:, query:, body:)
+        request = { endpoint: endpoint, method: method, query: query, body: body }
         case method
         when :get
           response = conn.get(SERVER + endpoint, query)
-          service_response = ExternalApi::Response.new(response)
+          service_response = ExternalApi::Response.new(response, request)
           fail service_response.error if service_response.error.present?
 
           service_response
         when :post
           response = conn.post(SERVER + endpoint, body)
-          service_response = ExternalApi::Response.new(response)
+          service_response = ExternalApi::Response.new(response, request)
           fail service_response.error if service_response.error.present?
 
           service_response
