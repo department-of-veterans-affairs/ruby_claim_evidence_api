@@ -9,10 +9,11 @@ module ExternalApi
   class Response
     attr_reader :resp, :code
 
-    def initialize(resp, uses_net_http: false)
+    def initialize(resp, request, uses_net_http: false)
       @resp = resp
       @uses_net_http = uses_net_http
       @code = @resp.try(:code).to_i || @resp.try(:status)
+      @request = request
     end
 
     # Wrapper method to check for errors
@@ -67,9 +68,9 @@ module ExternalApi
 
       message = error_message
       if ERROR_LOOKUP.key? code
-        ERROR_LOOKUP[code].new(code: code, message: message)
+        ERROR_LOOKUP[code].new(code: code, message: message, request: @request)
       else
-        ClaimEvidenceApi::Error::ClaimEvidenceApiError.new(code: code, message: message)
+        ClaimEvidenceApi::Error::ClaimEvidenceApiError.new(code: code, message: message, request: @request)
       end
     end
 

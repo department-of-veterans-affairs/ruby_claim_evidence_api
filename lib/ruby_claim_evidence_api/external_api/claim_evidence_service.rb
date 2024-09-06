@@ -157,13 +157,13 @@ module ExternalApi
             case method
             when :get
               response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
+              service_response = ExternalApi::Response.new(response, request)
               fail service_response.error if service_response.error.present?
 
               service_response
             when :post
               response = HTTPI.post(request)
-              service_response = ExternalApi::Response.new(response)
+              service_response = ExternalApi::Response.new(response, request)
               fail service_response.error if service_response.error.present?
 
               service_response
@@ -175,13 +175,13 @@ module ExternalApi
           case method
           when :get
             response = HTTPI.get(request)
-            service_response = ExternalApi::Response.new(response)
+            service_response = ExternalApi::Response.new(response, request)
             fail service_response.error if service_response.error.present?
 
             service_response
           when :post
             response = HTTPI.post(request)
-            service_response = ExternalApi::Response.new(response)
+            service_response = ExternalApi::Response.new(response, request)
             fail service_response.error if service_response.error.present?
 
             service_response
@@ -241,7 +241,7 @@ module ExternalApi
       def handle_http_response(http, request)
         http.start do |https|
           response = https.request(request)
-          service_response = ExternalApi::Response.new(response, uses_net_http: true)
+          service_response = ExternalApi::Response.new(response, request, uses_net_http: true)
           fail service_response.error if service_response.error.present?
 
           return service_response
