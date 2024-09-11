@@ -13,20 +13,18 @@ class MockApiClient
   private
 
   def mock_api_response(endpoint)
-    response = not_found_response
-
     case endpoint
-    when /\/files\/[\w\d-]+\/content/
-      response = files_content_response
-    when /\/files\/[\w\d-]+/
-      response = update_veteran_file_response
-    when /\/files/
-      response = upload_veteran_file_response
+    when %r{^/files/[\w\d-]+/content}
+      files_content_response
+    when %r{^/files/[\w\d-]+}
+      update_veteran_file_response
+    when %r{^/files}
+      upload_veteran_file_response
     when ExternalApi::ClaimEvidenceService::FOLDERS_FILES_SEARCH_PATH
-      response = files_folders_search_response
+      files_folders_search_response
+    else
+      not_found_response
     end
-
-    response
   end
 
   def files_content_response
@@ -35,7 +33,10 @@ class MockApiClient
       'spec/support/get_document_content.pdf'
     )
 
-    ExternalApi::Response.new(HTTPI::Response.new(200, {}, File.binread(file_name)))
+    ExternalApi::Response.new(
+      HTTPI::Response.new(200, {}, File.binread(file_name)),
+      :files_content_response
+    )
   end
 
   def files_folders_search_response
@@ -46,7 +47,10 @@ class MockApiClient
       )
     )
 
-    ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
+    ExternalApi::Response.new(
+      HTTPI::Response.new(200, {}, json_obj),
+      :files_folders_search_response
+    )
   end
 
   def update_veteran_file_response
@@ -57,7 +61,10 @@ class MockApiClient
       )
     )
 
-    ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
+    ExternalApi::Response.new(
+      HTTPI::Response.new(200, {}, json_obj),
+      :update_veteran_file_response
+    )
   end
 
   def upload_veteran_file_response
@@ -68,12 +75,16 @@ class MockApiClient
         'spec/support/api_responses/update_veteran_file_response.json'
       )
     )
-    ExternalApi::Response.new(HTTPI::Response.new(200, {}, json_obj))
+    ExternalApi::Response.new(
+      HTTPI::Response.new(200, {}, json_obj),
+      :upload_veteran_file_response
+    )
   end
 
   def not_found_response
     ExternalApi::Response.new(
-      HTTPI::Response.new(404, {}, { status: 'not found' })
+      HTTPI::Response.new(404, {}, { status: 'not found' }),
+      :not_found_response
     )
   end
 end
