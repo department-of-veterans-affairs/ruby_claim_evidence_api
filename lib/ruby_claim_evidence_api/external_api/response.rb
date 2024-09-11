@@ -9,7 +9,7 @@ module ExternalApi
   class Response
     attr_reader :resp, :code
 
-    def initialize(resp, request, uses_net_http: false)
+    def initialize(resp, request: nil, uses_net_http: false)
       @resp = resp
       @uses_net_http = uses_net_http
       @code = @resp.try(:code).to_i || @resp.try(:status)
