@@ -44,11 +44,11 @@ module ExternalApi
       initial_search = post_file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body(filters: filters))
       initial_results = initial_search.body
 
-      total_result = initial_results['page']['totalResults'].to_i
+      total_results = initial_results['page']['totalResults'].to_i
       total_pages = initial_results['page']['totalPages'].to_i
       current_page = initial_results['page']['currentPage'].to_i
 
-      return initial_search if total_result.zero? || current_page == total_pages
+      return initial_search if total_results.zero? || current_page == total_pages
 
       responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
@@ -95,7 +95,8 @@ module ExternalApi
       final_response = { 'page': initial_results['page'], 'files': response_files }.to_json
 
       ExternalApi::Response.new(
-        HTTPI::Response.new(initial_search.code, initial_search.resp.headers, final_response)
+        HTTPI::Response.new(initial_search.code, initial_search.resp.headers, final_response),
+        nil
       )
     end
 
