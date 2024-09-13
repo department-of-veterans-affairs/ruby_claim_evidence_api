@@ -40,7 +40,7 @@ module ExternalApi
       end
     end
 
-    def to_json(_)
+    def to_json(_ = nil)
       {
         error: error_message,
         body: body
