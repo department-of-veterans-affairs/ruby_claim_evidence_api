@@ -40,8 +40,9 @@ module ExternalApi
       end
     end
 
-    def to_json(_ = nil)
+    def to_json(custom_message: nil)
       {
+        custom_message: custom_message,
         error: error_message,
         body: body
       }
@@ -86,7 +87,6 @@ module ExternalApi
           body['message'] || body['messages'] || body['errors'][0]['message']
         end
       rescue StandardError => e
-        logger.error "Error accessing response body: #{body}"
         "Encountered #{e} while attempting to access response body"
       end
     end
