@@ -88,7 +88,7 @@ module ExternalApi
         if !response.body.nil? && !response.body.empty? && response.body.key?('files')
           response_files.concat(response.body['files'])
         else
-          logger.error(response.to_json)
+          logger.error(response.to_json(custom_message: 'No files found in response'))
         end
       end
 
