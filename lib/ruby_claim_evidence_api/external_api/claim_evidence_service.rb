@@ -4,7 +4,7 @@ require 'pry'
 require 'httpi'
 require 'active_support/all'
 require 'ruby_claim_evidence_api/external_api/response'
-require 'aws-sdk'
+# require 'aws-sdk'
 require 'base64'
 
 module ExternalApi
@@ -26,8 +26,9 @@ module ExternalApi
       "Content-Type": 'application/json',
       "Accept": '*/*'
     }.freeze
-    REGION = ENV['AWS_REGION']
-    AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
+
+    FILES_CONTENT_PATH = '/files/:uuid/content'
+    FOLDERS_FILES_SEARCH_PATH = '/folders/files:search'
 
     class << self
       def document_types_request
@@ -54,8 +55,28 @@ module ExternalApi
         )
 
         jwt_token = generate_jwt_token
-        request['Authorization'] = jwt_token
+        request['Authorization'] = "Bearer #{jwt_token}"
         request['X-Folder-URI'] = "VETERAN:FILENUMBER:#{vet_file_number}"
+
+        request
+      end
+
+      def update_document_request(veteran_file_number:, file_uuid:, file_update_payload:)
+        request = set_upload_document_form_data_for_request(
+          request: Net::HTTP::Post.new(file_update_uri(file_uuid)),
+          payload: {
+            providerData: {
+              contentSource: file_update_payload.file_content_source,
+              documentTypeId: file_update_payload.document_type_id,
+              dateVaReceivedDocument: file_update_payload.date_va_received_document,
+              subject: file_update_payload.subject
+            }
+          },
+          file_path: file_update_payload.file_content_path
+        )
+
+        request['Authorization'] = "Bearer #{generate_jwt_token}"
+        request['X-Folder-URI'] = "VETERAN:FILENUMBER:#{veteran_file_number}"
 
         request
       end
@@ -74,6 +95,16 @@ module ExternalApi
 
       def upload_document(file, vet_file_number, doc_info)
         send_multipart_post_request(upload_document_request(file, vet_file_number, doc_info)).body
+      end
+
+      def update_document(veteran_file_number:, file_uuid:, file_update_payload:)
+        send_multipart_post_request(
+          update_document_request(
+            veteran_file_number: veteran_file_number,
+            file_uuid: file_uuid,
+            file_update_payload: file_update_payload
+          )
+        ).body
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
@@ -126,13 +157,13 @@ module ExternalApi
             case method
             when :get
               response = HTTPI.get(request)
-              service_response = ExternalApi::Response.new(response)
+              service_response = ExternalApi::Response.new(response, request)
               fail service_response.error if service_response.error.present?
 
               service_response
             when :post
               response = HTTPI.post(request)
-              service_response = ExternalApi::Response.new(response)
+              service_response = ExternalApi::Response.new(response, request)
               fail service_response.error if service_response.error.present?
 
               service_response
@@ -144,13 +175,13 @@ module ExternalApi
           case method
           when :get
             response = HTTPI.get(request)
-            service_response = ExternalApi::Response.new(response)
+            service_response = ExternalApi::Response.new(response, request)
             fail service_response.error if service_response.error.present?
 
             service_response
           when :post
             response = HTTPI.post(request)
-            service_response = ExternalApi::Response.new(response)
+            service_response = ExternalApi::Response.new(response, request)
             fail service_response.error if service_response.error.present?
 
             service_response
@@ -161,52 +192,56 @@ module ExternalApi
       end
       # rubocop:enable Metrics/PerceivedComplexity, Metrics/AbcSize, Metrics/CyclomaticComplexity
 
-      def aws_client
-        @aws_client ||= Aws::Comprehend::Client.new(
-          region: REGION
-        )
-      end
 
-      def aws_stub_client
-        @aws_stub_client ||= Aws::Comprehend::Client.new(
-          region: REGION,
-          stub_responses: true
-        )
-      end
+      # REGION = ENV['AWS_REGION']
+      # AWS_COMPREHEND_SCORE = ENV['AWS_COMPREHEND_SCORE']
 
-      def get_key_phrases(ocr_data, stub_response: false)
-        key_phrase_parameters = {
-          text: ocr_data,
-          language_code: 'en'
-        }
-        if stub_response == true
-          aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
-        else
-          aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
-        end
-      end
+      # def aws_client
+      #   @aws_client ||= Aws::Comprehend::Client.new(
+      #     region: REGION
+      #   )
+      # end
 
-      def filter_key_phrases_by_score(key_phrases)
-        key_phrases.filter_map do |key_phrase|
-          key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE.to_f
-        end
-      end
+      # def aws_stub_client
+      #   @aws_stub_client ||= Aws::Comprehend::Client.new(
+      #     region: REGION,
+      #     stub_responses: true
+      #   )
+      # end
 
-      def get_key_phrases_from_document(doc_uuid, stub_response: false)
-        ocr_data = get_ocr_document(doc_uuid)
+      # def get_key_phrases(ocr_data, stub_response: false)
+      #   key_phrase_parameters = {
+      #     text: ocr_data,
+      #     language_code: 'en'
+      #   }
+      #   if stub_response == true
+      #     aws_stub_client.detect_key_phrases(key_phrase_parameters).key_phrases
+      #   else
+      #     aws_client.detect_key_phrases(key_phrase_parameters).key_phrases
+      #   end
+      # end
 
-        return unless ocr_data.present?
+      # def filter_key_phrases_by_score(key_phrases)
+      #   key_phrases.filter_map do |key_phrase|
+      #     key_phrase[:text] if !key_phrase[:score].nil? && key_phrase[:score] >= AWS_COMPREHEND_SCORE.to_f
+      #   end
+      # end
 
-        key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
-        filter_key_phrases_by_score(key_phrases)
-      end
+      # def get_key_phrases_from_document(doc_uuid, stub_response: false)
+      #   ocr_data = get_ocr_document(doc_uuid)
+
+      #   return unless ocr_data.present?
+
+      #   key_phrases = get_key_phrases(ocr_data, stub_response: stub_response)
+      #   filter_key_phrases_by_score(key_phrases)
+      # end
 
       private
 
       def handle_http_response(http, request)
         http.start do |https|
           response = https.request(request)
-          service_response = ExternalApi::Response.new(response, uses_net_http: true)
+          service_response = ExternalApi::Response.new(response, request, uses_net_http: true)
           fail service_response.error if service_response.error.present?
 
           return service_response
@@ -224,6 +259,10 @@ module ExternalApi
 
       def file_upload_uri
         @file_upload_uri = URI("#{BASE_URL}#{SERVER}/files")
+      end
+
+      def file_update_uri(file_uuid)
+        @file_update_uri = URI("#{BASE_URL}#{SERVER}/files/#{file_uuid}")
       end
 
       def generate_jwt_token
