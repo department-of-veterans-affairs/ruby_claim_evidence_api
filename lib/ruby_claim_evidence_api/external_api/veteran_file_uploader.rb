@@ -6,7 +6,17 @@ module ExternalApi
   # upload documents through CE API for a given veteran
   class VeteranFileUploader < ApiBase
     def upload_veteran_file(file_path:, veteran_file_number:, doc_info:)
-      payload = {
+      api_client.upload_document(
+        file_path,
+        veteran_file_number,
+        file_upload_payload(doc_info)
+      )
+    end
+
+    private
+
+    def file_upload_payload(doc_info)
+      {
         contentName: doc_info.content_name,
         providerData: {
           contentSource: doc_info.content_source,
@@ -16,8 +26,6 @@ module ExternalApi
           newMail: doc_info.new_mail
         }
       }
-
-			api_client.upload_document(file_path, veteran_file_number, payload)
     end
   end
 end
