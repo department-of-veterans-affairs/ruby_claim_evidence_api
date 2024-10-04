@@ -15,15 +15,11 @@ class ApiBase
   attr_accessor :use_canned_api_responses, :logger
 
   def api_client
-    return @api_client unless @api_client.nil?
-
-    @api_client = if use_canned_api_responses
-                    MockApiClient.new
-                  else
-                    ExternalApi::ClaimEvidenceService.new
-                  end
-
-    @api_client
+    if use_canned_api_responses
+      MockApiClient.new
+    else
+      ExternalApi::ClaimEvidenceService.new
+    end
   end
 
   def x_folder_uri_header(veteran_file_number)
