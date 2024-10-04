@@ -14,12 +14,6 @@ module ExternalApi
   # rubocop:disable Metrics/ClassLength
   class ClaimEvidenceService
     # Environment Variables
-    TOKEN_SECRET = ENV['CLAIM_EVIDENCE_SECRET']
-    TOKEN_ISSUER = ENV['CLAIM_EVIDENCE_ISSUER']
-    TOKEN_USER = ENV['CLAIM_EVIDENCE_VBMS_USER']
-    TOKEN_STATION_ID = ENV['CLAIM_EVIDENCE_STATION_ID']
-    BASE_URL = ENV['CLAIM_EVIDENCE_API_URL']
-    CERT_FILE_LOCATION = ENV['SSL_CERT_FILE']
     SERVER = 'api/v1/rest'
     DOCUMENT_TYPES_ENDPOINT = '/documenttypes'
     HEADERS = {
@@ -30,7 +24,16 @@ module ExternalApi
     FILES_CONTENT_PATH = '/files/:uuid/content'
     FOLDERS_FILES_SEARCH_PATH = '/folders/files:search'
 
-    class << self
+    def initialize
+      self.base_url = ENV['CLAIM_EVIDENCE_API_URL']
+      self.cert_file_location = ENV['SSL_CERT_FILE']
+      self.claim_evidence_request = nil
+      self.token_issuer = ENV['CLAIM_EVIDENCE_ISSUER']
+      self.token_secret = ENV['CLAIM_EVIDENCE_SECRET']
+      self.token_station_id = ENV['CLAIM_EVIDENCE_STATION_ID']
+      self.token_user = ENV['CLAIM_EVIDENCE_VBMS_USER']
+    end
+
       def document_types_request
         {
           headers: HEADERS,
@@ -115,13 +118,13 @@ module ExternalApi
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 
         http.ssl_version = :TLSv1_2
-        http.ca_file = CERT_FILE_LOCATION
+        http.ca_file = cert_file_location
         http.cert = OpenSSL::X509::Certificate.new(File.read(ENV['BGS_CERT_LOCATION']))
         http.key = OpenSSL::PKey::RSA.new(File.read(ENV['BGS_KEY_LOCATION']))
 
         # Send Request
         if Object.const_defined?('MetricsService')
-          MetricsService.record("api.claim.evidence POST request to '#{BASE_URL}#{SERVER}/files'",
+          MetricsService.record("api.claim.evidence POST request to '#{base_url}#{SERVER}/files'",
                                 service: :claim_evidence,
                                 name: '/files') do
             handle_http_response(http, request)
@@ -135,14 +138,14 @@ module ExternalApi
       def send_ce_api_request(endpoint:, query: {}, headers: {}, method: :get, body: nil)
         jwt_token = generate_jwt_token
 
-        url = URI::DEFAULT_PARSER.escape(BASE_URL + SERVER + endpoint)
+        url = URI::DEFAULT_PARSER.escape(base_url + SERVER + endpoint)
         request = HTTPI::Request.new(url)
         request.query = query
         request.open_timeout = 30
         request.read_timeout = 30
         request.body = body.to_json unless body.nil?
         request.auth.ssl.ssl_version  = :TLSv1_2
-        request.auth.ssl.ca_cert_file = CERT_FILE_LOCATION
+        request.auth.ssl.ca_cert_file = cert_file_location
         request.auth.ssl.cert_file = ENV['BGS_CERT_LOCATION']
         request.auth.ssl.cert_key_file = ENV['BGS_KEY_LOCATION']
         request.headers = headers.merge(Authorization: "Bearer #{jwt_token}")
@@ -238,6 +241,14 @@ module ExternalApi
 
       private
 
+      attr_accessor :base_url,
+                    :cert_file_location,
+                    :claim_evidence_request,
+                    :token_issuer,
+                    :token_secret,
+                    :token_station_id,
+                    :token_user
+
       def handle_http_response(http, request)
         http.start do |https|
           response = https.request(request)
@@ -258,11 +269,11 @@ module ExternalApi
       end
 
       def file_upload_uri
-        @file_upload_uri = URI("#{BASE_URL}#{SERVER}/files")
+        @file_upload_uri = URI("#{base_url}#{SERVER}/files")
       end
 
       def file_update_uri(file_uuid)
-        @file_update_uri = URI("#{BASE_URL}#{SERVER}/files/#{file_uuid}")
+        @file_update_uri = URI("#{base_url}#{SERVER}/files/#{file_uuid}")
       end
 
       def generate_jwt_token
@@ -274,28 +285,27 @@ module ExternalApi
         data = {
           jti: SecureRandom.uuid,
           iat: current_timestamp,
-          iss: TOKEN_ISSUER,
-          applicationID: TOKEN_ISSUER,
-          userID: TOKEN_USER,
-          stationID: TOKEN_STATION_ID
+          iss: token_issuer,
+          applicationID: token_issuer,
+          userID: token_user,
+          stationID: token_station_id
         }
         stringified_header = header.to_json.encode('UTF-8')
         encoded_header = base64url(stringified_header)
         stringified_data = data.to_json.encode('UTF-8')
         encoded_data = base64url(stringified_data)
         token = "#{encoded_header}.#{encoded_data}"
-        signature = OpenSSL::HMAC.digest('SHA256', TOKEN_SECRET, token)
+        signature = OpenSSL::HMAC.digest('SHA256', token_secret, token)
 
         "#{token}.#{base64url(signature)}"
       end
 
       def base64url(source)
-        encoded_source = Base64.encode64(source)
+        encoded_source = Base64.strict_encode64(source)
         encoded_source = encoded_source.sub(/=+$/, '')
         encoded_source = encoded_source.tr('+', '-')
         encoded_source.tr('/', '_')
       end
-    end
   end
   # rubocop:enable Metrics/ClassLength, Metrics/MethodLength
 end

@@ -16,7 +16,7 @@ describe ApiBase do
     let(:described) { described_class.new(use_canned_api_responses: false) }
 
     it 'uses the actual API client' do
-      expect(described.send(:api_client).new).to be_a ExternalApi::ClaimEvidenceService
+      expect(described.send(:api_client)).to be_an_instance_of ExternalApi::ClaimEvidenceService
     end
   end
 end

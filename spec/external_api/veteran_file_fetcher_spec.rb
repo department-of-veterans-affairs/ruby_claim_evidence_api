@@ -16,9 +16,15 @@ describe ExternalApi::VeteranFileFetcher do
     )
   end
 
+  let(:mock_claim_evidence_service) { instance_double(ExternalApi::ClaimEvidenceService) }
+
+  before do
+    allow(ExternalApi::ClaimEvidenceService).to receive(:new).and_return(mock_claim_evidence_service)
+  end
+
   describe '#fetch_veteran_file_list' do
     it 'calls the API endpoint' do
-      expect(ExternalApi::ClaimEvidenceService).to receive(:send_ce_api_request)
+      expect(mock_claim_evidence_service).to receive(:send_ce_api_request)
         .with(
           endpoint: '/folders/files:search',
           query: {},

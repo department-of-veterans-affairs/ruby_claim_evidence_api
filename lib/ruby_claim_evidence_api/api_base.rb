@@ -20,7 +20,7 @@ class ApiBase
     @api_client = if use_canned_api_responses
                     MockApiClient.new
                   else
-                    ExternalApi::ClaimEvidenceService
+                    ExternalApi::ClaimEvidenceService.new
                   end
 
     @api_client
