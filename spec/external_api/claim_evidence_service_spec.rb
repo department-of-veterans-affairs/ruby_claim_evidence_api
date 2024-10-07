@@ -3,6 +3,7 @@
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
 require 'ruby_claim_evidence_api/models/claim_evidence_file_update_payload'
+require 'ruby_claim_evidence_api/models/claim_evidence_request'
 # require 'aws-sdk'
 require './spec/external_api/spec_helper'
 require 'webmock/rspec'
@@ -31,6 +32,13 @@ describe ExternalApi::ClaimEvidenceService do
         }
       }
     }
+  end
+
+  let(:claim_evidence_request) do
+    ClaimEvidenceRequest.new(
+      user_css_id: 'USER_858',
+      station_id: 273
+    )
   end
 
   before do
@@ -222,19 +230,19 @@ describe ExternalApi::ClaimEvidenceService do
   context 'response success' do
     it 'document types' do
       allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
-      document_types = described_class.new.document_types
+      document_types = described_class.new(claim_evidence_request: claim_evidence_request).document_types
       expect(document_types).to be_present
     end
 
     it 'alt_document_types' do
       allow(HTTPI).to receive(:get).and_return(success_alt_doc_types_response)
-      alt_document_types = described_class.new.alt_document_types
+      alt_document_types = described_class.new(claim_evidence_request: claim_evidence_request).alt_document_types
       expect(alt_document_types).to be_present
     end
 
     it 'get_ocr_document' do
       allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
-      get_ocr_document = described_class.new.get_ocr_document(doc_uuid)
+      get_ocr_document = described_class.new(claim_evidence_request: claim_evidence_request).get_ocr_document(doc_uuid)
       expect(get_ocr_document).to be_present
       expect(get_ocr_document).to eq('Lorem ipsum')
     end
@@ -275,12 +283,12 @@ describe ExternalApi::ClaimEvidenceService do
       end
 
       it 'uploads document' do
-        described_class.new.upload_document(file, file_number, doc_info)
+        described_class.new(claim_evidence_request: claim_evidence_request).upload_document(file, file_number, doc_info)
         expect(WebMock).to have_requested(:post, upload_url)
       end
 
       it 'updates document' do
-        described_class.new.update_document(
+        described_class.new(claim_evidence_request: claim_evidence_request).update_document(
           veteran_file_number: file_number,
           file_uuid: '123456789',
           file_update_payload: ClaimEvidenceFileUpdatePayload.new(
@@ -299,28 +307,28 @@ describe ExternalApi::ClaimEvidenceService do
     context 'throws fallback error' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceApiError' do
         allow(HTTPI).to receive(:get).and_return(error_response)
-        expect { described_class.new.document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
       end
     end
 
     context '401' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError' do
         allow(HTTPI).to receive(:get).and_return(unauthorized_response)
-        expect { described_class.new.document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
       end
     end
 
     context '403' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError' do
         allow(HTTPI).to receive(:get).and_return(forbidden_response)
-        expect { described_class.new.document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
       end
     end
 
     context '404' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError' do
         allow(HTTPI).to receive(:get).and_return(not_found_response)
-        expect { described_class.new.document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
       end
     end
 
@@ -328,7 +336,7 @@ describe ExternalApi::ClaimEvidenceService do
       let!(:error_code) { 500 }
       it 'throws ClaimEvidenceApi::Error:ClaimEvidenceInternalServerError' do
         allow(HTTPI).to receive(:get).and_return(internal_server_error_response)
-        expect { described_class.new.document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
       end
     end
   end

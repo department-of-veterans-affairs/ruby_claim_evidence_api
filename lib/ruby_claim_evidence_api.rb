@@ -12,6 +12,7 @@ require 'ruby_claim_evidence_api/external_api/veteran_file_uploader'
 # Models
 require 'ruby_claim_evidence_api/models/claim_evidence_file_update_payload'
 require 'ruby_claim_evidence_api/models/claim_evidence_file_upload_payload'
+require 'ruby_claim_evidence_api/models/claim_evidence_request'
 
 # Fakes
 require 'ruby_claim_evidence_api/fakes/claim_evidence_service'
