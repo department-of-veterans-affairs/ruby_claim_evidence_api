@@ -33,6 +33,7 @@ describe ExternalApi::ClaimEvidenceService do
       }
     }
   end
+
   let(:claim_evidence_request) do
     ClaimEvidenceRequest.new(
       user_css_id: 'USER_858',
