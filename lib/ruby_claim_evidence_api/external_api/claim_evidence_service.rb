@@ -24,10 +24,10 @@ module ExternalApi
     FILES_CONTENT_PATH = '/files/:uuid/content'
     FOLDERS_FILES_SEARCH_PATH = '/folders/files:search'
 
-    def initialize
+    def initialize(claim_evidence_request:)
       self.base_url = ENV['CLAIM_EVIDENCE_API_URL']
       self.cert_file_location = ENV['SSL_CERT_FILE']
-      self.claim_evidence_request = nil
+      self.claim_evidence_request = claim_evidence_request
       self.token_issuer = ENV['CLAIM_EVIDENCE_ISSUER']
       self.token_secret = ENV['CLAIM_EVIDENCE_SECRET']
       self.token_station_id = ENV['CLAIM_EVIDENCE_STATION_ID']
@@ -287,8 +287,8 @@ module ExternalApi
         iat: current_timestamp,
         iss: token_issuer,
         applicationID: token_issuer,
-        userID: token_user,
-        stationID: token_station_id
+        userID: claim_evidence_request.user_css_id,
+        stationID: claim_evidence_request.station_id
       }
       stringified_header = header.to_json.encode('UTF-8')
       encoded_header = base64url(stringified_header)
