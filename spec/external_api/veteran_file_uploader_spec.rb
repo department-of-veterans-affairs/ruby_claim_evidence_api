@@ -21,6 +21,11 @@ describe ExternalApi::VeteranFileUploader do
       new_mail: true
     )
   end
+  let(:mock_claim_evidence_service) { instance_double(ExternalApi::ClaimEvidenceService) }
+
+  before do
+    allow(ExternalApi::ClaimEvidenceService).to receive(:new).and_return(mock_claim_evidence_service)
+  end
 
   describe '#upload_veteran_file' do
     it 'calls the API endpoint with the correct parameters' do
@@ -35,7 +40,7 @@ describe ExternalApi::VeteranFileUploader do
         }
       }
 
-      expect(ExternalApi::ClaimEvidenceService).to receive(:upload_document)
+      expect(mock_claim_evidence_service).to receive(:upload_document)
         .with(
           'path/to/test.pdf',
           '123456789',
