@@ -3,13 +3,13 @@
 require 'httpi'
 require 'ruby_claim_evidence_api/external_api/claim_evidence_service'
 require 'ruby_claim_evidence_api/models/claim_evidence_file_update_payload'
+require 'ruby_claim_evidence_api/models/claim_evidence_request'
 # require 'aws-sdk'
 require './spec/external_api/spec_helper'
 require 'webmock/rspec'
 
 describe ExternalApi::ClaimEvidenceService do
   # Fake/Testing ENV variables
-  let(:base_url) { 'https://fake.api.claimevidence.com' }
   let(:client_secret) { 'SOME-FAKE-KEY' }
   let(:doc_uuid) { 'SOME-FAKE-UUID' }
   let(:service_id) { 'SOME-FAKE-SERVICE' }
@@ -33,8 +33,27 @@ describe ExternalApi::ClaimEvidenceService do
       }
     }
   end
+
+  let(:claim_evidence_request) do
+    ClaimEvidenceRequest.new(
+      user_css_id: 'USER_858',
+      station_id: 273
+    )
+  end
+
   before do
-    ExternalApi::ClaimEvidenceService::BASE_URL = base_url
+    ENV['CLAIM_EVIDENCE_SECRET'] = 'CLAIM_EVIDENCE_SECRET'
+    ENV['CLAIM_EVIDENCE_ISSUER'] = 'CLAIM_EVIDENCE_ISSUER'
+    ENV['CLAIM_EVIDENCE_VBMS_USER'] = 'CLAIM_EVIDENCE_VBMS_USER'
+    ENV['CLAIM_EVIDENCE_STATION_ID'] = 'CLAIM_EVIDENCE_STATION_ID'
+    ENV['CLAIM_EVIDENCE_API_URL'] = 'https://fake.api.claimevidence.com/'
+    ENV['SSL_CERT_FILE'] = 'SSL_CERT_FILE'
+    ENV['BGS_CERT_LOCATION'] = 'BGS_CERT_LOCATION'
+    ENV['BGS_KEY_LOCATION'] = 'BGS_KEY_LOCATION'
+
+    allow(File).to receive(:read).and_call_original
+    allow(File).to receive(:read).with('BGS_CERT_LOCATION').and_return('BGS_CERT_LOCATION')
+    allow(File).to receive(:read).with('BGS_KEY_LOCATION').and_return('BGS_KEY_LOCATION')
   end
 
   let(:doc_types_body) do
@@ -210,53 +229,53 @@ describe ExternalApi::ClaimEvidenceService do
 
   context 'response success' do
     it 'document types' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_doc_types_response)
-      document_types = ExternalApi::ClaimEvidenceService.document_types
+      document_types = described_class.new(claim_evidence_request: claim_evidence_request).document_types
       expect(document_types).to be_present
     end
 
     it 'alt_document_types' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_alt_doc_types_response)
-      alt_document_types = ExternalApi::ClaimEvidenceService.alt_document_types
+      alt_document_types = described_class.new(claim_evidence_request: claim_evidence_request).alt_document_types
       expect(alt_document_types).to be_present
     end
 
     it 'get_ocr_document' do
-      allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
       allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
-      get_ocr_document = ExternalApi::ClaimEvidenceService.get_ocr_document(doc_uuid)
+      get_ocr_document = described_class.new(claim_evidence_request: claim_evidence_request).get_ocr_document(doc_uuid)
       expect(get_ocr_document).to be_present
       expect(get_ocr_document).to eq('Lorem ipsum')
     end
 
     describe 'with multipart Net HTTP request' do
-      let(:url) { 'https://fake.api.claimevidence.comapi/v1/rest/files' }
-      let(:ssl_key_path) { 'path/to/key' }
-      let(:ssl_cert_path) { 'path/to/cert' }
+      let(:upload_url) { 'https://fake.api.claimevidence.com/api/v1/rest/files' }
+      let(:update_url) { 'https://fake.api.claimevidence.com/api/v1/rest/files/123456789' }
 
       before do
-        allow(ENV).to receive(:[]).with('BGS_CERT_LOCATION').and_return(ssl_cert_path)
-        allow(ENV).to receive(:[]).with('BGS_KEY_LOCATION').and_return(ssl_key_path)
-
         allow(File).to receive(:binread).and_return("\x05\x00\x68\x65\x6c\x6c\x6f")
-        allow(File).to receive(:read).with(ssl_cert_path).and_return('mock cert content')
-        allow(File).to receive(:read).with(ssl_key_path).and_return('mock key content')
 
-        allow(OpenSSL::PKey::RSA).to receive(:new).with('mock key content').and_return('mock key')
-        allow(OpenSSL::X509::Certificate).to receive(:new).with('mock cert content').and_return('mock cert')
+        allow(OpenSSL::PKey::RSA).to receive(:new).with('BGS_KEY_LOCATION').and_return('mock key')
+        allow(OpenSSL::X509::Certificate).to receive(:new).with('BGS_CERT_LOCATION').and_return('mock cert')
 
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
-
-        stub_request(:post, url)
+        stub_request(:post, upload_url)
           .with(
             headers: {
               'Accept' => '*/*',
               'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-              'Authorization' => 'Bearer fake.jwt.token',
               'Content-Type' => 'multipart/form-data',
-              'Host' => 'fake.api.claimevidence.comapi',
+              'Host' => 'fake.api.claimevidence.com',
+              'User-Agent' => 'Ruby',
+              'X-Folder-Uri' => 'VETERAN:FILENUMBER:500000000'
+            }
+          ).to_return(status: 200, body: '', headers: {})
+
+          stub_request(:post, update_url)
+          .with(
+            headers: {
+              'Accept' => '*/*',
+              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+              'Content-Type' => 'multipart/form-data',
+              'Host' => 'fake.api.claimevidence.com',
               'User-Agent' => 'Ruby',
               'X-Folder-Uri' => 'VETERAN:FILENUMBER:500000000'
             }
@@ -264,66 +283,60 @@ describe ExternalApi::ClaimEvidenceService do
       end
 
       it 'uploads document' do
-        ExternalApi::ClaimEvidenceService.upload_document(file, file_number, doc_info)
-        expect(WebMock).to have_requested(:post, url)
+        described_class.new(claim_evidence_request: claim_evidence_request).upload_document(file, file_number, doc_info)
+        expect(WebMock).to have_requested(:post, upload_url)
       end
 
       it 'updates document' do
-        ExternalApi::ClaimEvidenceService.update_document(
+        described_class.new(claim_evidence_request: claim_evidence_request).update_document(
           veteran_file_number: file_number,
-          file_uuid: "123456789",
+          file_uuid: '123456789',
           file_update_payload: ClaimEvidenceFileUpdatePayload.new(
-            date_va_received_document: Time.zone.now,
-            document_type_id: uploadable_document.document_type_id,
-            file_content_path: uploadable_document.pdf_location,
-            file_content_source: uploadable_document.source
+            date_va_received_document: Time.current,
+            document_type_id: 'abc123',
+            file_content_path: '/path/to/doc',
+            file_content_source: 'encoded-string'
           )
         )
-        expect(WebMock).to have_requested(:post, url)
+        expect(WebMock).to have_requested(:post, update_url)
       end
     end
   end
 
   context 'response failure' do
-    subject { ExternalApi::ClaimEvidenceService.document_types }
     context 'throws fallback error' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceApiError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(error_response)
-        expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceApiError
       end
     end
 
     context '401' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(unauthorized_response)
-        expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceUnauthorizedError
       end
     end
 
     context '403' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(forbidden_response)
-        expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceForbiddenError
       end
     end
 
     context '404' do
       it 'throws ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(not_found_response)
-        expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceNotFoundError
       end
     end
 
     context '500' do
       let!(:error_code) { 500 }
       it 'throws ClaimEvidenceApi::Error:ClaimEvidenceInternalServerError' do
-        allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
         allow(HTTPI).to receive(:get).and_return(internal_server_error_response)
-        expect { subject }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
+        expect { described_class.new(claim_evidence_request: claim_evidence_request).document_types }.to raise_error ClaimEvidenceApi::Error::ClaimEvidenceInternalServerError
       end
     end
   end
@@ -402,7 +415,6 @@ describe ExternalApi::ClaimEvidenceService do
 
   #   it 'retrieves key_phrases from CE API document' do
   #     subject.aws_stub_client.stub_responses(:detect_key_phrases, { key_phrases: stub_response })
-  #     allow(ExternalApi::ClaimEvidenceService).to receive(:generate_jwt_token).and_return('fake.jwt.token')
   #     allow(HTTPI).to receive(:get).and_return(success_get_raw_ocr_document_response)
   #     output = subject.get_key_phrases_from_document(doc_uuid, stub_response: true)
   #     expect(output).to eq(%W[Department APPEAL\n1A])

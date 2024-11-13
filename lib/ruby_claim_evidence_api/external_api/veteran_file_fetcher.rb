@@ -10,38 +10,45 @@ module ExternalApi
   class VeteranFileFetcher < ApiBase
     include StringParser
 
-    def fetch_veteran_file_list(veteran_file_number:, filters: {})
+    def fetch_veteran_file_list(veteran_file_number:, claim_evidence_request:, filters: {})
       fetch_paginated_documents(
         veteran_file_number: veteran_file_number,
+        claim_evidence_request: claim_evidence_request,
         filters: filters
       ).body
     end
 
-    def fetch_veteran_file_list_by_date_range(veteran_file_number:, begin_date_range:, end_date_range:)
+    def fetch_veteran_file_list_by_date_range(veteran_file_number:, claim_evidence_request:, begin_date_range:, end_date_range:)
       filters = {
-        'systemData.uploadedDateTime' => {
-          'evaluationType' => 'BETWEEN',
-          'value' => [begin_date_range, end_date_range]
+        'systemData.uploadedDateTime': {
+          'evaluationType': 'BETWEEN',
+          'value': [begin_date_range, end_date_range]
         }
       }
       fetch_paginated_documents(
         veteran_file_number: veteran_file_number,
+        claim_evidence_request: claim_evidence_request,
         filters: filters
       ).body
     end
 
-    def get_document_content(doc_series_id:)
+    def get_document_content(doc_series_id:, claim_evidence_request:)
       # Document ID may be wrapped in curly braces, we only need the string
       doc_series_id = parse_document_id(doc_series_id)
-      response = api_client.send_ce_api_request(get_document_content_request(doc_series_id))
+      response = api_client(claim_evidence_request: claim_evidence_request)
+                 .send_ce_api_request(get_document_content_request(doc_series_id))
       # Returning this value as the api call returns a byte string and not a JSON body
       response.resp.body
     end
 
     private
 
-    def fetch_paginated_documents(veteran_file_number:, filters: {})
-      initial_search = post_file_folders_search(veteran_file_number: veteran_file_number, body: file_folders_search_body(filters: filters))
+    def fetch_paginated_documents(veteran_file_number:, claim_evidence_request:, filters: {})
+      initial_search = post_file_folders_search(
+        veteran_file_number: veteran_file_number,
+        claim_evidence_request: claim_evidence_request,
+        body: file_folders_search_body(filters: filters)
+      )
       initial_results = initial_search.body
 
       total_results = initial_results['page']['totalResults'].to_i
@@ -50,12 +57,12 @@ module ExternalApi
 
       return initial_search if total_results.zero? || current_page == total_pages
 
-      responses = fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
+      responses = fetch_remaining_pages(initial_search, claim_evidence_request, current_page, total_pages, veteran_file_number)
       build_fetch_veteran_file_list_response(responses, initial_results, initial_search)
     end
 
-    def post_file_folders_search(veteran_file_number:, query: {}, body: nil)
-      api_client.send_ce_api_request(
+    def post_file_folders_search(veteran_file_number:, claim_evidence_request:, query: {}, body: nil)
+      api_client(claim_evidence_request: claim_evidence_request).send_ce_api_request(
         endpoint: '/folders/files:search',
         query: query,
         headers: x_folder_uri_header(veteran_file_number),
@@ -64,7 +71,7 @@ module ExternalApi
       )
     end
 
-    def fetch_remaining_pages(initial_search, current_page, total_pages, veteran_file_number)
+    def fetch_remaining_pages(initial_search, claim_evidence_request, current_page, total_pages, veteran_file_number)
       responses = [initial_search]
 
       until current_page == total_pages
@@ -72,6 +79,7 @@ module ExternalApi
 
         current_search = post_file_folders_search(
           veteran_file_number: veteran_file_number,
+          claim_evidence_request: claim_evidence_request,
           body: file_folders_search_body(page: current_page)
         )
 
